@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     
     # drf app
     'rest_framework',
+    'drf_yasg',
     
     # project app
     'main',
