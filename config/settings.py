@@ -29,7 +29,13 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG_VALUE', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['www.neromakebrain.site', 'neromakerbrain.site', 'app']
+ALLOWED_HOSTS = ['www.neromakebrain.site',
+                 'neromakerbrain.site',
+                 'app',
+                 '10.0.2.2', #안드로이드 에뮬레이터
+                 'localhost',
+                 '127.0.0.1',
+                 ]
 
 
 # Application definition
