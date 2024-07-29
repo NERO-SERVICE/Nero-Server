@@ -29,7 +29,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG_VALUE', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['www.neromakebrain.site']
 
 
 # Application definition
@@ -97,6 +97,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     
+    #cors 설정
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     
@@ -172,6 +173,17 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# CSRF settings
+CSRF_TRUSTED_ORIGINS = ['https://www.neromakebrain.site', 'https://neromakebrain.site']
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_DOMAIN = '.neromakebrain.site'
+# corsheaders
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    # 로컬 개발용
+    'http://localhost:3000',
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -198,3 +210,4 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
