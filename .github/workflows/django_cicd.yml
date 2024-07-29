@@ -90,10 +90,10 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: ${{ secrets.SSH_PORT }}
         script: |
-          docker stop nero-server-was
-          docker rm nero-server-was
+          docker stop neroserver
+          docker rm neroserver
           docker image rm ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPONAME }}
-          docker run -d -v /home/django/media:/app/media -v /home/django/static:/app/static -e TZ=Asia/Seoul -p 8000:8000 --name nero-server-was ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPONAME }}
+          docker run -d -v /home/django/media:/app/media -v /home/django/static:/app/static -e TZ=Asia/Seoul -p 8000:8000 --name neroserver ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPONAME }}
     
     - name: Collect static files
       uses: appleboy/ssh-action@v1.0.0
