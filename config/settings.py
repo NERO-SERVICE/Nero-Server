@@ -41,16 +41,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     
     # drf app
     'rest_framework',
+    'rest_framework_simplejwt',
     'rest_framework.authtoken',
-    'drf_yasg',
-    'django.contrib.sites',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'dj_rest_auth',
+    'allauth.socialaccount.providers.kakao', 
+    'drf_yasg',
     'corsheaders',
     
     # project app
@@ -72,6 +75,15 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 
 ACCOUNT_EMAIL_VERIFICATION = 'none' # 회원가입 과정에서 이메일 인증 사용 X
 
+REST_AUTH = {
+    'USE_JWT' : True,
+    'JWT_AUTH_HTTPONLY' : True,
+    'JWT_AUTH_COOKIE' : "access_token",
+    'JWT_AUTH_REFRESH_TOKEN' : "refresh_token",
+    "JWT_AUTH_COOKIE_USE_CSRF" : True,
+    'SESSION_LOGIN' : False,
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
@@ -84,8 +96,20 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
+    'ROTATE_REFRESH_TOKEN': False,
+    'TOKEN_USER_CLASS': "django.contrib.auth.models.User",
+}
+
+SOCIALACCOUNT_PROVIDERS = {
+    'kakao': {
+        'APP': {
+            'client_id': 'KAKAO_CLIENT_ID',
+            'secret': 'KAKAO_SECRET_KEY',
+            'key': 'KAKAO_REST_API_KEY',
+        }
+    }
 }
 
 AUTHENTICATION_BACKENDS = (
