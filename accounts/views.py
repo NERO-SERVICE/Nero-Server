@@ -26,12 +26,15 @@ def kakao_auth(request):
         if not kakao_id:
             return Response({'error': 'Failed to retrieve user info from Kakao'}, status=400)
 
+        nickname = user_info.get('properties', {}).get('nickname')
+
         user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
-            'username': user_info.get('properties', {}).get('nickname'),
-            'email': user_info.get('kakao_account', {}).get('email'),
+            'username': nickname,
+            'nickname': nickname,
+            'email': None,
         })
 
-        return Response({'id': user.id, 'username': user.username, 'email': user.email})
+        return Response({'id': user.id, 'username': user.username, 'nickname': user.nickname})
 
     except Exception as e:
         print(f"Exception: {str(e)}")
