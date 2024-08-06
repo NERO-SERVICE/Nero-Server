@@ -3,6 +3,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import User
+from decouple import config
 
 @api_view(['POST'])
 def kakao_auth(request):
@@ -16,8 +17,8 @@ def kakao_auth(request):
         token_url = 'https://kauth.kakao.com/oauth/token'
         data = {
             'grant_type': 'authorization_code',
-            'client_id': settings.SOCIAL_AUTH_KAKAO_KEY,
-            'redirect_uri': settings.SOCIAL_AUTH_KAKAO_REDIRECT_URI,
+            'client_id': config('SOCIAL_AUTH_KAKAO_KEY'),
+            'redirect_uri': config('SOCIAL_AUTH_KAKAO_REDIRECT_URI'),
             'code': code,
         }
         headers = {
