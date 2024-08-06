@@ -1,6 +1,8 @@
 from django.urls import path
-from .views import KakaoLogin
+from .views import KakaoLogin, KakaoSignup, CheckNicknameView
 
 urlpatterns = [
-    path('api/social/login/', KakaoLogin.as_view(), name='kakao_login'),
+    path('social/login/', KakaoLogin.as_view(), name='kakao_login'),
+    path('social/signup/', KakaoSignup.as_view(), name='kakao_signup'),
+    path('check-nickname/', CheckNicknameView.as_view(), name='check_nickname'),
 ]
