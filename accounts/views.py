@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -48,10 +49,11 @@ def kakao_auth(request):
         print(f"Exception: {str(e)}")
         return Response({'error': str(e)}, status=500)
 
+
 @api_view(['GET'])
 @authentication_classes([KakaoAuthentication])
 @permission_classes([IsAuthenticated])
 def get_user_info(request):
     user = request.user
     serializer = UserSerializer(user)
-    return Response(serializer.data)
+    return JsonResponse(serializer.data, json_dumps_params={'ensure_ascii': False})
