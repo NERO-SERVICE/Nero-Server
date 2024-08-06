@@ -2,8 +2,8 @@ import requests
 from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import User
 from decouple import config
+from .models import User
 
 @api_view(['POST'])
 def kakao_auth(request):
