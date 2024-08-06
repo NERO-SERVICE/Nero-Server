@@ -3,6 +3,7 @@ from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import User
+from .serializers import UserSerializer
 
 @api_view(['POST'])
 def kakao_auth(request):
@@ -39,3 +40,10 @@ def kakao_auth(request):
     except Exception as e:
         print(f"Exception: {str(e)}")
         return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+def get_user_info(request):
+    user = request.user
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
