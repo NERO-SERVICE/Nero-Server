@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.kakao', 
     'drf_yasg',
     'corsheaders',
+    'social_django',
     
     # project app
     'main',
@@ -95,6 +96,11 @@ REST_FRAMEWORK = {
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
+SOCIAL_AUTH_KAKAO_KEY = config('SOCIAL_AUTH_KAKAO_KEY')
+SOCIAL_AUTH_KAKAO_SECRET = config('SOCIAL_AUTH_KAKAO_SECRET', default='')
+SOCIAL_AUTH_KAKAO_REDIRECT_URI = config('SOCIAL_AUTH_KAKAO_REDIRECT_URI')
+SOCIAL_AUTH_URL_NAMESPACE = 'social'
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=2),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
@@ -113,6 +119,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 AUTHENTICATION_BACKENDS = (
+    'social_core.backends.kakao.KakaoOAuth2',
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 )
