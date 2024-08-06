@@ -12,12 +12,9 @@ User = get_user_model()
 class KakaoSignup(APIView):
     def post(self, request, *args, **kwargs):
         access_token = request.data.get('accessToken')
-        nickname = request.data.get('nickname')
 
         if not access_token:
             return Response({'error': 'accessToken is required'}, status=status.HTTP_400_BAD_REQUEST)
-        if not nickname:
-            return Response({'error': 'nickname is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             # 카카오 토큰 검증 및 유저 정보 가져오기
@@ -43,15 +40,40 @@ class KakaoSignup(APIView):
             if User.objects.filter(kakao_id=kakao_id).exists():
                 return Response({'error': 'User already exists'}, status=status.HTTP_400_BAD_REQUEST)
 
-            user = User.objects.create_user(username=username, email=email, nickname=nickname, kakao_id=kakao_id)
-            SocialAccount.objects.create(user=user, uid=kakao_id, provider='kakao')
+            user = User.objects.create_user(username=username, email=email, kakao_id=kakao_id)
 
             token, _ = Token.objects.get_or_create(user=user)
-            return Response({'key': token.key}, status=status.HTTP_201_CREATED)
+            return Response({'uid': user.id, 'key': token.key}, status=status.HTTP_201_CREATED)
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+class AddNickname(APIView):
+    def post(self, request, *args, **kwargs):
+        uid = request.data.get('uid')
+        nickname = request.data.get('nickname')
+
+        if not uid or not nickname:
+            return Response({'error': 'uid and nickname are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(id=uid)
+            if user.nickname:
+                return Response({'error': 'Nickname already set'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            if User.objects.filter(nickname=nickname).exists():
+                return Response({'error': 'Nickname already in use'}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.nickname = nickname
+            user.save()
+
+            return Response({'success': 'Nickname added'}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class KakaoLogin(APIView):
     def post(self, request, *args, **kwargs):
@@ -83,8 +105,7 @@ class KakaoLogin(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
+        
 class CheckNicknameView(APIView):
     def post(self, request, *args, **kwargs):
         nickname = request.data.get('nickname')
