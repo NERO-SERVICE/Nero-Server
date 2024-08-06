@@ -1,116 +1,51 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from allauth.socialaccount.models import SocialAccount
-from django.contrib.auth import get_user_model
-from rest_framework.authtoken.models import Token
 import requests
-from .serializers import CustomUserSerializer
+from django.conf import settings
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import User
+from decouple import config
 
-User = get_user_model()
+@api_view(['POST'])
+def kakao_auth(request):
+    code = request.data.get('code')
+    if not code:
+        return Response({'error': 'Authorization code is required'}, status=400)
 
-class KakaoSignup(APIView):
-    def post(self, request, *args, **kwargs):
-        access_token = request.data.get('accessToken')
+    try:
+        token_url = 'https://kauth.kakao.com/oauth/token'
+        data = {
+            'grant_type': 'authorization_code',
+            'client_id': config('SOCIAL_AUTH_KAKAO_CLIENT_ID'),
+            'redirect_uri': config('SOCIAL_AUTH_KAKAO_SECRET'),
+            'code': code,
+        }
+        headers = {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        }
+        response = requests.post(token_url, data=data, headers=headers)
+        response_data = response.json()
 
-        if not access_token:
-            return Response({'error': 'accessToken is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if response.status_code != 200:
+            return Response(response_data, status=response.status_code)
 
-        try:
-            # 카카오 토큰 검증 및 유저 정보 가져오기
-            url = 'https://kapi.kakao.com/v2/user/me'
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
-            }
-            response = requests.get(url, headers=headers)
-            if response.status_code != 200:
-                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            user_data = response.json()
-            kakao_id = user_data['id']
-            kakao_account = user_data.get('kakao_account', {})
-            email = kakao_account.get('email')
-            username = user_data['properties'].get('nickname', '')
+        access_token = response_data.get('access_token')
+        user_info_url = 'https://kapi.kakao.com/v2/user/me'
+        user_info_headers = {
+            'Authorization': f'Bearer {access_token}',
+        }
+        user_info_response = requests.get(user_info_url, headers=user_info_headers)
+        user_info = user_info_response.json()
 
-            if not email:
-                email = f'{kakao_id}@kakao.com'
+        kakao_id = user_info.get('id')
+        if not kakao_id:
+            return Response({'error': 'Failed to retrieve user info from Kakao'}, status=400)
 
-            # 유저 생성
-            if User.objects.filter(kakao_id=kakao_id).exists():
-                return Response({'error': 'User already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
+            'username': user_info.get('properties', {}).get('nickname'),
+            'email': user_info.get('kakao_account', {}).get('email'),
+        })
 
-            user = User.objects.create_user(username=username, email=email, kakao_id=kakao_id)
+        return Response({'id': user.id, 'username': user.username, 'email': user.email})
 
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({'uid': user.id, 'key': token.key}, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class AddNickname(APIView):
-    def post(self, request, *args, **kwargs):
-        uid = request.data.get('uid')
-        nickname = request.data.get('nickname')
-
-        if not uid or not nickname:
-            return Response({'error': 'uid and nickname are required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = User.objects.get(id=uid)
-            if user.nickname:
-                return Response({'error': 'Nickname already set'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if User.objects.filter(nickname=nickname).exists():
-                return Response({'error': 'Nickname already in use'}, status=status.HTTP_400_BAD_REQUEST)
-
-            user.nickname = nickname
-            user.save()
-
-            return Response({'success': 'Nickname added'}, status=status.HTTP_200_OK)
-
-        except User.DoesNotExist:
-            return Response({'error': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class KakaoLogin(APIView):
-    def post(self, request, *args, **kwargs):
-        access_token = request.data.get('accessToken')
-
-        if not access_token:
-            return Response({'error': 'accessToken is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # 카카오 토큰 검증 및 유저 정보 가져오기
-            url = 'https://kapi.kakao.com/v2/user/me'
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
-            }
-            response = requests.get(url, headers=headers)
-            if response.status_code != 200:
-                return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            user_data = response.json()
-            kakao_id = user_data['id']
-
-            try:
-                user = User.objects.get(kakao_id=kakao_id)
-                token, _ = Token.objects.get_or_create(user=user)
-                return Response({'key': token.key}, status=status.HTTP_200_OK)
-            except User.DoesNotExist:
-                return Response({'error': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-class CheckNicknameView(APIView):
-    def post(self, request, *args, **kwargs):
-        nickname = request.data.get('nickname')
-        if not nickname:
-            return Response({'error': 'nickname is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        is_unique = not User.objects.filter(nickname=nickname).exists()
-        return Response({'is_unique': is_unique}, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

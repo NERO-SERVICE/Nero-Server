@@ -62,7 +62,7 @@ INSTALLED_APPS = [
 ]
 
 SITE_ID = 1
-AUTH_USER_MODEL = 'accounts.CustomUser'
+AUTH_USER_MODEL = 'accounts.User'
 
 REST_USE_JWT = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None # username 필드 사용 x
