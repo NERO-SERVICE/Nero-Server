@@ -35,12 +35,12 @@ class KakaoLogin(APIView):
             email = kakao_account.get('email')
             username = user_data['properties'].get('nickname', '')
 
-            # Use nickname and email for user creation
+            # Use kakao_id as username if no email is provided
             if not email:
                 email = f'{kakao_id}@kakao.com'
 
             # Create or get user
-            user, created = User.objects.get_or_create(username=kakao_id, defaults={'email': email, 'first_name': nickname})
+            user, created = User.objects.get_or_create(username=kakao_id, defaults={'nickname': nickname})
 
             if created:
                 SocialAccount.objects.create(user=user, uid=kakao_id, provider='kakao')
