@@ -13,7 +13,7 @@ from .authentication import KakaoAuthentication
 def kakao_auth(request):
     access_token = request.data.get('access_token')
     if not access_token:
-        return Response({'error': 'Access token is required'}, status=400)
+        return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
 
     try:
         print(f"Received access token: {access_token}")
@@ -30,7 +30,7 @@ def kakao_auth(request):
 
         kakao_id = user_info.get('id')
         if not kakao_id:
-            return Response({'error': 'Failed to retrieve user info from Kakao'}, status=400)
+            return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
         nickname = user_info.get('properties', {}).get('nickname', 'No nickname')
 
@@ -40,15 +40,14 @@ def kakao_auth(request):
             'email': None,
         })
 
-        return Response({'id': user.id, 'username': user.username, 'nickname': user.nickname})
+        return JsonResponse({'id': user.id, 'username': user.username, 'nickname': user.nickname}, json_dumps_params={'ensure_ascii': False})
 
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
-        return Response({'error': 'Failed to retrieve user info from Kakao'}, status=500)
+        return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         print(f"Exception: {str(e)}")
-        return Response({'error': str(e)}, status=500)
-
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
 
 @api_view(['GET'])
 @authentication_classes([KakaoAuthentication])
