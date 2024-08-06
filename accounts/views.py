@@ -2,7 +2,6 @@ import requests
 from django.conf import settings
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from decouple import config
 from .models import User
 
 @api_view(['POST'])
@@ -12,11 +11,13 @@ def kakao_auth(request):
         return Response({'error': 'Authorization code is required'}, status=400)
 
     try:
+        print(f"Received authorization code: {code}")
+
         token_url = 'https://kauth.kakao.com/oauth/token'
         data = {
             'grant_type': 'authorization_code',
-            'client_id': config('SOCIAL_AUTH_KAKAO_CLIENT_ID'),
-            'redirect_uri': config('SOCIAL_AUTH_KAKAO_SECRET'),
+            'client_id': settings.SOCIAL_AUTH_KAKAO_KEY,
+            'redirect_uri': settings.SOCIAL_AUTH_KAKAO_REDIRECT_URI,
             'code': code,
         }
         headers = {
@@ -24,6 +25,8 @@ def kakao_auth(request):
         }
         response = requests.post(token_url, data=data, headers=headers)
         response_data = response.json()
+
+        print(f"Token response: {response_data}")
 
         if response.status_code != 200:
             return Response(response_data, status=response.status_code)
@@ -35,6 +38,8 @@ def kakao_auth(request):
         }
         user_info_response = requests.get(user_info_url, headers=user_info_headers)
         user_info = user_info_response.json()
+
+        print(f"User info response: {user_info}")
 
         kakao_id = user_info.get('id')
         if not kakao_id:
@@ -48,4 +53,5 @@ def kakao_auth(request):
         return Response({'id': user.id, 'username': user.username, 'email': user.email})
 
     except Exception as e:
+        print(f"Exception: {str(e)}")
         return Response({'error': str(e)}, status=500)
