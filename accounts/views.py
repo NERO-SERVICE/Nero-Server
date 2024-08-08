@@ -50,8 +50,7 @@ def kakao_auth(request):
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
 
 @api_view(['GET'])
-@authentication_classes([KakaoAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def get_user_info(request, uid):
     try:
         user = User.objects.get(uid=uid)
