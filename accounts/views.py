@@ -53,7 +53,7 @@ def kakao_auth(request):
 @permission_classes([AllowAny])
 def get_user_info(request, uid):
     try:
-        user = User.objects.get(uid=uid)
+        user = User.objects.get(id=uid)
         serializer = UserSerializer(user)
         return JsonResponse(serializer.data, json_dumps_params={'ensure_ascii': False})
     except User.DoesNotExist:
