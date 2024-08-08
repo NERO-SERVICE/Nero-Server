@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
-import uuid
 
 class User(AbstractUser):
     uid = models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')
@@ -11,3 +10,6 @@ class User(AbstractUser):
     updatedAt = models.DateTimeField(default=timezone.now)
     temperature = models.IntegerField(default=36) 
     email = models.EmailField(unique=True, null=True, blank=True, default='')
+    
+    def __str__(self):
+        return self.kakaoId
