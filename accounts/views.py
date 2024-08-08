@@ -13,8 +13,8 @@ from .authentication import KakaoAuthentication
 def kakao_auth(request):
     access_token = request.data.get('access_token')
     nickname = request.data.get('nickname')
-    created_at = request.data.get('created_at')
-    updated_at = request.data.get('updated_at')
+    createdAt = request.data.get('createdAt')
+    updatedAt = request.data.get('updatedAt')
     temperature = request.data.get('temperature')
     
     if not access_token:
@@ -27,16 +27,16 @@ def kakao_auth(request):
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
 
-        kakao_id = user_info.get('id')
-        if not kakao_id:
+        kakaoId = user_info.get('id')
+        if not kakaoId:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        user, created = User.objects.get_or_create(kakao_id=kakao_id)
+        user, created = User.objects.get_or_create(kakaoId=kakaoId)
 
         if created:
             user.nickname = nickname
-            user.createdAt = created_at
-            user.updatedAt = updated_at
+            user.createdAt = createdAt
+            user.updatedAt = updatedAt
             user.temperature = temperature
             user.set_unusable_password()
             user.save()
