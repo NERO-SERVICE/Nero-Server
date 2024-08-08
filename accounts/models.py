@@ -10,6 +10,3 @@ class User(AbstractUser):
     updatedAt = models.DateTimeField(default=timezone.now)
     temperature = models.FloatField(default=36.5) 
     email = models.EmailField(unique=True, null=True, blank=True, default='')
-
-    def __str__(self):
-        return self.id or "id 미지정"
