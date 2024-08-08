@@ -12,4 +12,4 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, null=True, blank=True, default='')
 
     def __str__(self):
-        return self.kakaoId
+        return self.id or "id 미지정"
