@@ -23,10 +23,6 @@ class KakaoAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('Authentication failed')
 
         nickname = user_info.get('properties', {}).get('nickname', 'No nickname')
-        user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
-            'username': nickname,
-            'nickname': nickname,
-            'email': None,
-        })
+        user, created = User.objects.get_or_create(kakao_id=kakao_id)
 
         return (user, None)
