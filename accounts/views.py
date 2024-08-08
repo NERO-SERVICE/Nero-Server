@@ -8,6 +8,66 @@ from .models import User
 from .serializers import UserSerializer
 from .authentication import KakaoAuthentication
 
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def kakao_auth(request):
+#     access_token = request.data.get('access_token')
+#     if not access_token:
+#         return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
+
+#     try:
+#         print(f"Received access token: {access_token}")
+
+#         user_info_url = 'https://kapi.kakao.com/v2/user/me'
+#         headers = {
+#             'Authorization': f'Bearer {access_token}',
+#         }
+#         user_info_response = requests.get(user_info_url, headers=headers)
+#         user_info_response.raise_for_status()
+#         user_info = user_info_response.json()
+
+#         print(f"User info response: {user_info}")
+
+#         kakao_id = user_info.get('id')
+#         if not kakao_id:
+#             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
+
+#         nickname = user_info.get('properties', {}).get('nickname', 'No nickname')
+
+#         user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
+#             'username': nickname,
+#             'nickname': nickname,
+#             'email': None,
+#         })
+
+#         return JsonResponse({'id': user.id, 'username': user.username, 'nickname': user.nickname}, json_dumps_params={'ensure_ascii': False})
+
+#     except requests.exceptions.RequestException as e:
+#         print(f"RequestException: {e}")
+#         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
+#     except Exception as e:
+#         print(f"Exception: {str(e)}")
+#         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
+# @api_view(['GET'])
+# @authentication_classes([KakaoAuthentication])
+# @permission_classes([IsAuthenticated])
+# def get_user_info(request):
+#     user = request.user
+#     serializer = UserSerializer(user)
+#     return JsonResponse(serializer.data, json_dumps_params={'ensure_ascii': False})
+
+import requests
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
+from .models import User
+from .serializers import UserSerializer
+from .authentication import KakaoAuthentication
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def kakao_auth(request):
@@ -16,8 +76,6 @@ def kakao_auth(request):
         return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
 
     try:
-        print(f"Received access token: {access_token}")
-
         user_info_url = 'https://kapi.kakao.com/v2/user/me'
         headers = {
             'Authorization': f'Bearer {access_token}',
@@ -26,33 +84,97 @@ def kakao_auth(request):
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
 
-        print(f"User info response: {user_info}")
-
         kakao_id = user_info.get('id')
         if not kakao_id:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        nickname = user_info.get('properties', {}).get('nickname', 'No nickname')
-
         user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
-            'username': nickname,
-            'nickname': nickname,
-            'email': None,
+            'username': kakao_id,
+            'nickname': user_info.get('properties', {}).get('nickname', 'No nickname'),
+            'email': user_info.get('kakao_account', {}).get('email', ''),
         })
 
-        return JsonResponse({'id': user.id, 'username': user.username, 'nickname': user.nickname}, json_dumps_params={'ensure_ascii': False})
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     except requests.exceptions.RequestException as e:
-        print(f"RequestException: {e}")
         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
-        print(f"Exception: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
 
 @api_view(['GET'])
 @authentication_classes([KakaoAuthentication])
 @permission_classes([IsAuthenticated])
-def get_user_info(request):
-    user = request.user
-    serializer = UserSerializer(user)
-    return JsonResponse(serializer.data, json_dumps_params={'ensure_ascii': False})
+def get_user_info(request, uid):
+    try:
+        user = User.objects.get(id=uid)
+        serializer = UserSerializer(user)
+        return JsonResponse(serializer.data, json_dumps_params={'ensure_ascii': False})
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def check_nickname(request):
+    nickname = request.GET.get('nickname')
+    if not nickname:
+        return JsonResponse({'error': 'Nickname is required'}, status=400, json_dumps_params={'ensure_ascii': False})
+
+    if User.objects.filter(nickname=nickname).exists():
+        return JsonResponse({'error': 'Nickname is already taken'}, status=400, json_dumps_params={'ensure_ascii': False})
+    else:
+        return JsonResponse({'message': 'Nickname is available'}, status=200, json_dumps_params={'ensure_ascii': False})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup(request):
+    data = request.data
+    serializer = UserSerializer(data=data)
+    if serializer.is_valid():
+        user = serializer.save()
+        user.set_unusable_password()
+        user.save()
+        return JsonResponse(serializer.data, status=200, json_dumps_params={'ensure_ascii': False})
+    return JsonResponse(serializer.errors, status=400, json_dumps_params={'ensure_ascii': False})
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup_with_kakao(request):
+    access_token = request.data.get('access_token')
+    if not access_token:
+        return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
+
+    try:
+        user_info_url = 'https://kapi.kakao.com/v2/user/me'
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+        }
+        user_info_response = requests.get(user_info_url, headers=headers)
+        user_info_response.raise_for_status()
+        user_info = user_info_response.json()
+
+        kakao_id = user_info.get('id')
+        if not kakao_id:
+            return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
+
+        user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
+            'username': kakao_id,
+            'nickname': user_info.get('properties', {}).get('nickname', 'No nickname'),
+            'email': user_info.get('kakao_account', {}).get('email', ''),
+        })
+
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})

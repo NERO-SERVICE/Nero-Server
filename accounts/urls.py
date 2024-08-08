@@ -1,7 +1,10 @@
 from django.urls import path
-from .views import kakao_auth, get_user_info
+from .views import kakao_auth, get_user_info, check_nickname, signup, signup_with_kakao
 
 urlpatterns = [
     path('auth/kakao/', kakao_auth, name='kakao_auth'),
-     path('userinfo/', get_user_info, name='get_user_info'),
+    path('userinfo/<str:uid>/', get_user_info, name='get_user_info'),
+    path('check-nickname/', check_nickname, name='check_nickname'),
+    path('signup/', signup, name='signup'),
+    path('signup/kakao/', signup_with_kakao, name='signup_with_kakao'),
 ]
