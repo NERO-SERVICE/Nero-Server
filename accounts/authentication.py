@@ -18,7 +18,7 @@ class KakaoAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('Invalid token')
 
         user_info = response.json()
-        kakaoId = user_info.get('id')
+        kakaoId = user_info.get('uid')
         if not kakaoId:
             raise exceptions.AuthenticationFailed('Authentication failed')
 
