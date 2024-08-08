@@ -4,9 +4,9 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['uid', 'nickname', 'kakaoId', 'created_at', 'updated_at', 'temperature']
+        fields = ['uid', 'nickname', 'kakaoId', 'createdAt', 'updatedAt', 'temperature']
 
 class UserSignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['uid', 'kakaoId', 'nickname', 'created_at', 'updated_at', 'temperature']
+        fields = ['uid', 'kakaoId', 'nickname', 'createdAt', 'updatedAt', 'temperature']
