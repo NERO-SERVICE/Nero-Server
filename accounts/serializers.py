@@ -10,4 +10,4 @@ class UserSerializer(serializers.ModelSerializer):
 class UserSignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'nickname', 'kakao_id', 'createdAt', 'updatedAt', 'temperature']
+        fields = ['id', 'nickname', 'kakaoId', 'createdAt', 'updatedAt', 'temperature']

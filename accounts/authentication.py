@@ -18,11 +18,11 @@ class KakaoAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('Invalid token')
 
         user_info = response.json()
-        kakao_id = user_info.get('id')
-        if not kakao_id:
+        kakaoId = user_info.get('id')
+        if not kakaoId:
             raise exceptions.AuthenticationFailed('Authentication failed')
 
         nickname = user_info.get('properties', {}).get('nickname', 'No nickname')
-        user, created = User.objects.get_or_create(kakao_id=kakao_id)
+        user, created = User.objects.get_or_create(kakaoId=kakaoId)
 
         return (user, None)

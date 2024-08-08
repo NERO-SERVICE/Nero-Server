@@ -84,11 +84,11 @@ def kakao_auth(request):
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
 
-        kakao_id = user_info.get('id')
-        if not kakao_id:
+        kakaoId = user_info.get('id')
+        if not kakaoId:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        user, created = User.objects.get_or_create(kakao_id=kakao_id)
+        user, created = User.objects.get_or_create(kakaoId=kakaoId)
 
         if created:
             user.set_unusable_password()
@@ -150,14 +150,14 @@ def signup_with_kakao(request):
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
 
-        kakao_id = user_info.get('id')
-        if not kakao_id:
+        kakaoId = user_info.get('id')
+        if not kakaoId:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        user, created = User.objects.get_or_create(kakao_id=kakao_id)
+        user, created = User.objects.get_or_create(kakaoId=kakaoId)
 
         if created:
-            user.kakao_id = kakao_id
+            user.kakaoId = kakaoId
             user.set_unusable_password()
             user.save()
         else:
