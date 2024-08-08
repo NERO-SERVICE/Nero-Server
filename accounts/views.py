@@ -65,7 +65,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, UserSignUpSerializer
 from .authentication import KakaoAuthentication
 
 @api_view(['POST'])
@@ -88,11 +88,7 @@ def kakao_auth(request):
         if not kakao_id:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
-            'username': kakao_id,
-            'nickname': user_info.get('properties', {}).get('nickname', 'No nickname'),
-            'email': user_info.get('kakao_account', {}).get('email', ''),
-        })
+        user, created = User.objects.get_or_create(kakao_id=kakao_id)
 
         if created:
             user.set_unusable_password()
@@ -105,6 +101,7 @@ def kakao_auth(request):
         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
 
 @api_view(['GET'])
 @authentication_classes([KakaoAuthentication])
@@ -131,22 +128,18 @@ def check_nickname(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def signup(request):
-    data = request.data
-    serializer = UserSerializer(data=data)
-    if serializer.is_valid():
-        user = serializer.save()
-        user.set_unusable_password()
-        user.save()
-        return JsonResponse(serializer.data, status=200, json_dumps_params={'ensure_ascii': False})
-    return JsonResponse(serializer.errors, status=400, json_dumps_params={'ensure_ascii': False})
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
 def signup_with_kakao(request):
     access_token = request.data.get('access_token')
+    nickname = request.data.get('nickname')
+    createdAt = request.data.get('createdAt')
+    updatedAt = request.data.get('updatedAt')
+    temperature = request.data.get('temperature')
+    
     if not access_token:
         return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
+
+    if not nickname:
+        return JsonResponse({'error': 'Nickname is required'}, status=400, json_dumps_params={'ensure_ascii': False})
 
     try:
         user_info_url = 'https://kapi.kakao.com/v2/user/me'
@@ -161,17 +154,20 @@ def signup_with_kakao(request):
         if not kakao_id:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        user, created = User.objects.get_or_create(kakao_id=kakao_id, defaults={
-            'username': kakao_id,
-            'nickname': user_info.get('properties', {}).get('nickname', 'No nickname'),
-            'email': user_info.get('kakao_account', {}).get('email', ''),
-        })
+        user, created = User.objects.get_or_create(kakao_id=kakao_id)
 
         if created:
+            user.kakao_id = kakao_id
             user.set_unusable_password()
             user.save()
+        else:
+            user.nickname = nickname
+            user.createdAt = createdAt
+            user.updatedAt = updatedAt
+            user.temperature = temperature
+            user.save()
 
-        serializer = UserSerializer(user)
+        serializer = UserSignUpSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except requests.exceptions.RequestException as e:
