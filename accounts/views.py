@@ -9,17 +9,14 @@ from .serializers import UserSerializer, UserSignUpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
 def get_tokens_for_user(uid):
     user = get_object_or_404(User, id=uid)
 
     refresh = RefreshToken.for_user(user)
     
     return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
+        'refreshToken': str(refresh),
+        'accessToken': str(refresh.access_token),
     }
 
 @api_view(['POST'])
