@@ -1,12 +1,11 @@
 import requests
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from .models import User
 from .serializers import UserSerializer, UserSignUpSerializer
-from .authentication import KakaoAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 
@@ -20,21 +19,19 @@ def get_tokens_for_user(uid):
         'access': str(refresh.access_token),
     }
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
 def kakao_auth(request):
-    access_token = request.data.get('access_token')
+    accessToken = request.data.get('accessToken')
     nickname = request.data.get('nickname')
     createdAt = request.data.get('createdAt')
     updatedAt = request.data.get('updatedAt')
     temperature = request.data.get('temperature')
     
-    if not access_token:
+    if not accessToken:
         return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
 
     try:
         user_info_url = 'https://kapi.kakao.com/v2/user/me'
-        headers = {'Authorization': f'Bearer {access_token}'}
+        headers = {'Authorization': f'Bearer {accessToken}'}
         user_info_response = requests.get(user_info_url, headers=headers)
         user_info_response.raise_for_status()
         user_info = user_info_response.json()
@@ -53,8 +50,11 @@ def kakao_auth(request):
             user.set_unusable_password()
             user.save()
 
+        # JWT 토큰 생성
+        tokens = get_tokens_for_user(user.id)
+        
         serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'user': serializer.data, 'tokens': tokens}, status=status.HTTP_200_OK)
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
