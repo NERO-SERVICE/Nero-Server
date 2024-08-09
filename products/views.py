@@ -13,7 +13,7 @@ class CreateProductView(APIView):
     def post(self, request):
         serializer = DrfProductSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=request.user)
+            serializer.save(owner=request.user)  # 로그인한 유저를 소유자로 설정
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -22,7 +22,7 @@ class RetrieveProductView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, doc_id=doc_id)
+        product = get_object_or_404(DrfProduct, docId=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
         serializer = DrfProductSerializer(product)
         return Response(serializer.data)
 
@@ -31,9 +31,7 @@ class UpdateProductView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, doc_id=doc_id)
-        if product.owner != request.user:
-            return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+        product = get_object_or_404(DrfProduct, docId=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
         serializer = DrfProductSerializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -45,9 +43,7 @@ class DeleteProductView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, doc_id=doc_id)
-        if product.owner != request.user:
-            return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
+        product = get_object_or_404(DrfProduct, docId=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -56,6 +52,6 @@ class ListProductsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        products = DrfProduct.objects.all()
+        products = DrfProduct.objects.filter(owner=request.user)  # 유저가 소유한 제품만 반환
         serializer = DrfProductSerializer(products, many=True)
         return Response(serializer.data)
