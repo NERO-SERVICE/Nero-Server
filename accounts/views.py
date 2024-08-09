@@ -22,7 +22,7 @@ def get_tokens_for_user(uid):
         'access': str(refresh.access_token),
     }
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 def kakao_auth(request):
     accessToken = request.data.get('accessToken')
