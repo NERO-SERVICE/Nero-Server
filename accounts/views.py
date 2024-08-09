@@ -8,10 +8,13 @@ from .models import User
 from .serializers import UserSerializer, UserSignUpSerializer
 from .authentication import KakaoAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User
+from django.shortcuts import get_object_or_404
 
-def get_tokens_for_user(user):
+def get_tokens_for_user(uid):
+    user = get_object_or_404(User, id=uid)
+    
     refresh = RefreshToken.for_user(user)
+    
     return {
         'refresh': str(refresh),
         'access': str(refresh.access_token),
