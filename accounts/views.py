@@ -9,6 +9,9 @@ from .serializers import UserSerializer, UserSignUpSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def get_tokens_for_user(uid):
     user = get_object_or_404(User, id=uid)
 
@@ -19,6 +22,8 @@ def get_tokens_for_user(uid):
         'access': str(refresh.access_token),
     }
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def kakao_auth(request):
     accessToken = request.data.get('accessToken')
     nickname = request.data.get('nickname')
