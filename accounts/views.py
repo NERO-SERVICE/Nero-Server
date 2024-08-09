@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 
 def get_tokens_for_user(uid):
     user = get_object_or_404(User, id=uid)
-    
+
     refresh = RefreshToken.for_user(user)
     
     return {
