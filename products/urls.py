@@ -4,9 +4,9 @@ from .views import CreateProductView, RetrieveProductView, UpdateProductView, De
 app_name = "products"
 
 urlpatterns = [
-    path('products/', ListProductsView.as_view(), name='list_products'),
-    path('products/create/', CreateProductView.as_view(), name='create_product'),
-    path('products/<str:doc_id>/', RetrieveProductView.as_view(), name='get_product'),
-    path('products/<str:doc_id>/update/', UpdateProductView.as_view(), name='update_product'),
-    path('products/<str:doc_id>/delete/', DeleteProductView.as_view(), name='delete_product'),
+    path('', ListProductsView.as_view(), name='list_products'),
+    path('create/', CreateProductView.as_view(), name='create_product'),
+    path('<str:doc_id>/', RetrieveProductView.as_view(), name='get_product'),
+    path('<str:doc_id>/update/', UpdateProductView.as_view(), name='update_product'),
+    path('<str:doc_id>/delete/', DeleteProductView.as_view(), name='delete_product'),
 ]
