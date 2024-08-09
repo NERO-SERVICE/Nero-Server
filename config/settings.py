@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     # project app
     'main',
     'accounts',
+    'products',
 ]
 
 SITE_ID = 1
