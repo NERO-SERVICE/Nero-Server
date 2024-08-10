@@ -7,7 +7,7 @@ class DrfProduct(models.Model):
     description = models.TextField(null=True, blank=True)
     productPrice = models.IntegerField(default=0)
     isFree = models.BooleanField(default=False)
-    imageUrls = models.JSONField(default=list)
+    imageUrls = models.JSONField(default=list, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
