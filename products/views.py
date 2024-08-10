@@ -52,12 +52,11 @@ class ListProductsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        owner_id = request.query_params.get('owner')  # 쿼리 파라미터에서 owner 값을 가져옴
-        if owner_id and str(request.user.id) == owner_id:
-            # owner_id가 쿼리 파라미터에 포함된 경우, 해당 owner_id의 제품만 필터링
-            products = DrfProduct.objects.filter(owner__id=owner_id)
-        else:
-            return Response({'detail': 'Invalid user or no products found.'}, status=status.HTTP_400_BAD_REQUEST)
+        # 요청한 사용자의 모든 제품을 필터링합니다.
+        products = DrfProduct.objects.filter(owner=request.user)
+        
+        if not products.exists():
+            return Response({'detail': 'No products found for this user.'}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = DrfProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
