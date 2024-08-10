@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 
 class DrfProduct(models.Model):
-    id = models.AutoField(primary_key=True)  # id 필드를 명시적으로 추가
+    id = models.AutoField(primary_key=True) 
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
     productPrice = models.IntegerField(default=0)
