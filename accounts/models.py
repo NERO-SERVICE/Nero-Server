@@ -9,4 +9,4 @@ class User(AbstractUser):
     createdAt = models.DateTimeField(default=timezone.now)
     updatedAt = models.DateTimeField(default=timezone.now)
     temperature = models.FloatField(default=36.5) 
-    email = models.EmailField(unique=True, null=True, blank=True, default='')
+    email = models.EmailField(unique=False, null=True, blank=True, default='')
