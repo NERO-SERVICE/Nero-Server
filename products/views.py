@@ -22,7 +22,7 @@ class RetrieveProductView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, docId=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
+        product = get_object_or_404(DrfProduct, id=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
         serializer = DrfProductSerializer(product)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -31,7 +31,7 @@ class UpdateProductView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, docId=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
+        product = get_object_or_404(DrfProduct, id=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
         serializer = DrfProductSerializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
