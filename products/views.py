@@ -43,7 +43,7 @@ class DeleteProductView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, docId=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
+        product = get_object_or_404(DrfProduct, id=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
