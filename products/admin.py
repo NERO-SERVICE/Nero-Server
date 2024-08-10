@@ -9,7 +9,7 @@ class DrfProductAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('docId', 'title', 'description', 'productPrice', 'isFree', 'status', 'categoryType', 'image_urls')
+            'fields': ('docId', 'title', 'description', 'productPrice', 'isFree', 'status', 'categoryType', 'imageUrls')
         }),
         ('Owner Information', {
             'fields': ('owner',)
