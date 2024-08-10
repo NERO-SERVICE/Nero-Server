@@ -25,9 +25,6 @@ def kakao_auth(request):
     accessToken = request.data.get('accessToken')
     kakaoId = request.data.get('kakaoId')
     nickname = request.data.get('nickname')
-    createdAt = request.data.get('createdAt')
-    updatedAt = request.data.get('updatedAt')
-    temperature = request.data.get('temperature')
     
     if not accessToken:
         return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
@@ -46,9 +43,6 @@ def kakao_auth(request):
         user, created = User.objects.get_or_create(kakaoId=kakaoId, nickname=nickname)
         
         if created:
-            user.createdAt = createdAt
-            user.updatedAt = updatedAt
-            user.temperature = temperature
             user.set_unusable_password()  # 비밀번호를 사용하지 않는 계정
             user.save()
 
