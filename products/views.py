@@ -21,8 +21,8 @@ class CreateProductView(APIView):
 class RetrieveProductView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, id=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
+    def get(self, request, id):
+        product = get_object_or_404(DrfProduct, id=id, owner=request.user)  # 유저가 소유한 제품인지 확인
         serializer = DrfProductSerializer(product)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -30,8 +30,8 @@ class RetrieveProductView(APIView):
 class UpdateProductView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def put(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, id=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
+    def put(self, request, id):
+        product = get_object_or_404(DrfProduct, id=id, owner=request.user)  # 유저가 소유한 제품인지 확인
         serializer = DrfProductSerializer(product, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -42,8 +42,8 @@ class UpdateProductView(APIView):
 class DeleteProductView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def delete(self, request, doc_id):
-        product = get_object_or_404(DrfProduct, id=doc_id, owner=request.user)  # 유저가 소유한 제품인지 확인
+    def delete(self, request, id):
+        product = get_object_or_404(DrfProduct, id=id, owner=request.user)  # 유저가 소유한 제품인지 확인
         product.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
