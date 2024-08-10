@@ -43,10 +43,9 @@ def kakao_auth(request):
         if not kakaoId:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
-        user, created = User.objects.get_or_create(kakaoId=kakaoId)
+        user, created = User.objects.get_or_create(kakaoId=kakaoId, nickname=nickname)
         
         if created:
-            user.nickname = nickname
             user.createdAt = createdAt
             user.updatedAt = updatedAt
             user.temperature = temperature
