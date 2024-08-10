@@ -5,7 +5,7 @@ class DrfProductAdmin(admin.ModelAdmin):
     list_display = ('title', 'owner', 'productPrice', 'status', 'categoryType', 'createdAt', 'updatedAt', 'viewCount')
     search_fields = ('title', 'description', 'owner__username', 'status', 'categoryType')
     list_filter = ('status', 'isFree', 'categoryType', 'createdAt', 'updatedAt')
-    readonly_fields = ('createdAt', 'updatedAt', 'viewCount', 'docId')
+    readonly_fields = ('createdAt', 'updatedAt', 'viewCount')
 
     fieldsets = (
         ('Basic Information', {
