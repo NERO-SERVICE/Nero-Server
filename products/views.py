@@ -23,7 +23,7 @@ class RetrieveProductView(APIView):
 
     def get(self, request, id):
         product = get_object_or_404(DrfProduct, id=id, owner=request.user)  # 유저가 소유한 제품인지 확인
-        serializer = DrfProductSerializer(product, many=True, context={'request': request})
+        serializer = DrfProductSerializer(product, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 제품 수정
