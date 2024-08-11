@@ -21,6 +21,11 @@ class DrfProduct(models.Model):
     wantTradeLocationLabel = models.CharField(max_length=255, null=True, blank=True)
     categoryType = models.CharField(max_length=255)
     likers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_products', blank=True)
+    
+    @property
+    def imageUrls(self):
+        # product와 연결된 ImageFile의 file.url 값을 리스트로 반환
+        return [image.file.url for image in self.imageFiles.all()]
 
     def __str__(self):
         return self.title
