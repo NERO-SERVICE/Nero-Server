@@ -3,7 +3,7 @@ from .models import DrfProduct, ImageFile
 
 class ImageFileInline(admin.TabularInline):
     model = ImageFile
-    extra = 1
+    extra = 5
     fields = ['file', 'uploaded_at']
     readonly_fields = ['uploaded_at']
 
