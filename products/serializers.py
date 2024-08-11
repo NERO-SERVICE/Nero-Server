@@ -25,4 +25,5 @@ class DrfProductSerializer(serializers.ModelSerializer):
         ]
 
     def get_imageUrls(self, obj):
-        return [image.file.url for image in obj.imageFiles.all()]
+        request = self.context.get('request')
+        return [request.build_absolute_uri(image.file.url) for image in obj.imageFiles.all()]
