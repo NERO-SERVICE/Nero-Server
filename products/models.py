@@ -7,7 +7,6 @@ class DrfProduct(models.Model):
     description = models.TextField(null=True, blank=True)
     productPrice = models.IntegerField(default=0)
     isFree = models.BooleanField(default=False)
-    imageUrls = models.JSONField(default=list, null=True, blank=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
@@ -25,3 +24,12 @@ class DrfProduct(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class ImageFile(models.Model):
+    product = models.ForeignKey(DrfProduct, related_name='imageFiles', on_delete=models.CASCADE)
+    file = models.ImageField(upload_to='product_images/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.product.title}"
