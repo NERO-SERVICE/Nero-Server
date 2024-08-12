@@ -12,7 +12,7 @@ class DrfClinics(models.Model):
     title = models.CharField(max_length=255)
     
     def __str__(self):
-        return self.recentDay
+        return self.title
     
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
