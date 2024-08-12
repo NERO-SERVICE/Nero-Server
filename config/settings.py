@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'main',
     'accounts',
     'products',
+    'clinics',
 ]
 
 SITE_ID = 1
