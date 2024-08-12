@@ -18,11 +18,11 @@ class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     item = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
     status = models.CharField(max_length=50, choices=[
-        ('a', '콘서타 18mg'),
-        ('b', '콘서타 27mg'),
-        ('c', '콘서타 36mg'),
-        ('d', '메디카넷 18mg'),
-        ('e', '페로스핀 18mg'),
+        ('콘서타 18mg', '콘서타 18mg'),
+        ('콘서타 27mg', '콘서타 27mg'),
+        ('콘서타 36mg', '콘서타 36mg'),
+        ('메디카넷 18mg', '메디카넷 18mg'),
+        ('페로스핀 18mg', '페로스핀 18mg'),
     ])
     number = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
