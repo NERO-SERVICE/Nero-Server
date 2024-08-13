@@ -1,15 +1,18 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import DrfClinicsViewSet, DrfDrugViewSet
+from django.urls import path
+from .views import (
+    ListClinicsView, RetrieveClinicView, UpdateClinicView, DeleteClinicView,
+    ListDrugsView, RetrieveDrugView, UpdateDrugView, DeleteDrugView
+)
 
-app_name="clinics"
-
-router = DefaultRouter()
-router.register(r'', DrfClinicsViewSet, basename='clinics')
+app_name = "clinics"
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('<int:clinicId>/', DrfClinicsViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='clinic-detail'),
-    path('<int:clinicId>/drugs/', DrfDrugViewSet.as_view({'get': 'list', 'post': 'create'}), name='clinic-drugs-list'),
-    path('<int:clinicId>/drugs/<int:drugId>/', DrfDrugViewSet.as_view({'get': 'retrieve', 'put': 'update', 'delete': 'destroy'}), name='clinic-drugs-detail'),
+    path('', ListClinicsView.as_view(), name='list_clinics'),
+    path('<int:clinicId>/', RetrieveClinicView.as_view(), name='retrieve_clinic'),
+    path('<int:clinicId>/update/', UpdateClinicView.as_view(), name='update_clinic'),
+    path('<int:clinicId>/delete/', DeleteClinicView.as_view(), name='delete_clinic'),
+    path('<int:clinicId>/drugs/', ListDrugsView.as_view(), name='list_drugs'),
+    path('<int:clinicId>/drugs/<int:drugId>/', RetrieveDrugView.as_view(), name='retrieve_drug'),
+    path('<int:clinicId>/drugs/<int:drugId>/update/', UpdateDrugView.as_view(), name='update_drug'),
+    path('<int:clinicId>/drugs/<int:drugId>/delete/', DeleteDrugView.as_view(), name='delete_drug'),
 ]
