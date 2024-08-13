@@ -10,6 +10,10 @@ class ListClinicsView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return DrfClinics.objects.filter(owner=self.request.user)
+        
+class CreateClinicView(generics.CreateAPIView):
+    serializer_class = DrfClinicsSerializer
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -58,6 +62,10 @@ class ListDrugsView(generics.ListCreateAPIView):
             return DrfDrug.objects.filter(item=clinic)
         except DrfClinics.DoesNotExist:
             raise NotFound("Clinic not found or you do not have permission to access it.")
+        
+class CreateDrugView(generics.CreateAPIView):
+    serializer_class = DrfDrugSerializer
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         clinic_id = self.kwargs.get('clinicId')
