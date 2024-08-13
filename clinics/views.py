@@ -10,6 +10,17 @@ class ListClinicsView(generics.ListAPIView):
 
     def get_queryset(self):
         return DrfClinics.objects.filter(owner=self.request.user)
+    
+class RetrieveClinicView(generics.RetrieveAPIView):
+    serializer_class = DrfClinicsSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        clinic_id = self.kwargs.get('clinicId')
+        try:
+            return DrfClinics.objects.get(clinicId=clinic_id, owner=self.request.user)
+        except DrfClinics.DoesNotExist:
+            raise NotFound("Clinic not found or you do not have permission to access it.")
 
 class CreateClinicView(generics.CreateAPIView):
     serializer_class = DrfClinicsSerializer
