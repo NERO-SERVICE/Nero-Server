@@ -5,9 +5,9 @@ from django.conf import settings
 class DrfClinics(models.Model):
     clinicId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    recentDay = models.DateTimeField(auto_now_add=True)
-    nextDay = models.DateTimeField(auto_now_add=True)
-    createdAt = models.DateTimeField(auto_now_add=True)
+    recentDay = models.DateTimeField()
+    nextDay = models.DateTimeField()
+    createdAt = models.DateTimeField()
     updatedAt = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
     
