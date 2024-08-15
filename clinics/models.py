@@ -14,6 +14,9 @@ class DrfClinics(models.Model):
     def __str__(self):
         return self.title
     
+    class Meta:
+        ordering = ['-updatedAt'] 
+    
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     item = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
