@@ -14,7 +14,7 @@ urlpatterns = [
     path('', TodayListCreateView.as_view(), name='today-list-create'),
     path('<int:pk>/', TodayDetailView.as_view(), name='today-detail'),
     path('questions/', QuestionListView.as_view(), name='question-list'),
-    path('<int:today_id>/survey/<int:question_id>/', SurveyResponseCreateView.as_view(), name='survey-response-create'),
-    path('<int:today_id>/side_effect/<int:question_id>/', SideEffectResponseCreateView.as_view(), name='side-effect-response-create'),
-    path('self_records/', SelfRecordListCreateView.as_view(), name='self-record-list'),
+    path('survey/', SurveyResponseCreateView.as_view(), name='survey-response-create'),
+    path('side_effect/', SideEffectResponseCreateView.as_view(), name='side-effect-response-create'),
+    path('self_records/', SelfRecordListCreateView.as_view(), name='self-record-list-create'),
 ]
