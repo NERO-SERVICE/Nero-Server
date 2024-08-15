@@ -8,7 +8,7 @@ from .views import (
     SelfRecordListCreateView
 )
 
-app_name='todaylogs'
+app_name = 'todaylogs'
 
 urlpatterns = [
     path('', TodayListCreateView.as_view(), name='today-list-create'),

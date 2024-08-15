@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 class Question(models.Model):
     QUESTION_TYPES = [
@@ -14,11 +15,12 @@ class Question(models.Model):
 
 
 class Today(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    next_appointment_date = models.DateField()
+    next_appointment_date = models.DateField(null=True)
 
     def __str__(self):
-        return f"Today Entry - {self.created_at}"
+        return f"Today Entry - {self.user.username} - {self.created_at}"
 
 
 class SurveyResponse(models.Model):
@@ -32,7 +34,7 @@ class SurveyResponse(models.Model):
 
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='survey_responses')
-    answer = models.CharField(max_length=1, choices=TODAY_SURVEY_ANSWERS)
+    answer = models.CharField(max_length=1, choices=TODAY_SURVEY_ANSWERS, null=True)
 
     def __str__(self):
         return f"Survey Response - {self.question.question_text} : {self.answer}"
@@ -49,7 +51,7 @@ class SideEffectResponse(models.Model):
 
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='side_effect_responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='side_effect_responses')
-    answer = models.CharField(max_length=1, choices=SIDE_EFFECT_ANSWERS)
+    answer = models.CharField(max_length=1, choices=SIDE_EFFECT_ANSWERS, null=True)
 
     def __str__(self):
         return f"Side Effect Response - {self.question.question_text} : {self.answer}"
