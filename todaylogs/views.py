@@ -1,10 +1,10 @@
+from django.utils import timezone
 from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Today, SelfRecord, Question
-from .serializers import TodaySerializer, SurveyResponseSerializer, SideEffectResponseSerializer, SelfRecordSerializer, TodayDetailSerializer, QuestionSerializer
-from rest_framework.permissions import IsAuthenticated
-from time import timezone
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, SurveyResponseSerializer, SideEffectResponseSerializer
 
 class TodayListCreateView(generics.ListCreateAPIView):
     serializer_class = TodaySerializer
@@ -80,5 +80,5 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        today, created = Today.objects.get_or_create(owner=self.request.user, created_at=timezone.now().date())
+        today, created = Today.objects.get_or_create(owner=self.request.user, created_at__date=timezone.now().date())
         serializer.save(today=today)
