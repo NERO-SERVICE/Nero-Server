@@ -1,12 +1,5 @@
 from rest_framework import serializers
 from .models import Today, SurveyResponse, SideEffectResponse, SelfRecord, Question
-from accounts.models import User
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'nickname']
 
 class TodaySerializer(serializers.ModelSerializer):
     class Meta:
