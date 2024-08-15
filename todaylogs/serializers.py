@@ -1,19 +1,28 @@
 from rest_framework import serializers
-from .models import Today, Survey, SideEffect, SelfRecord
+from .models import Today, SurveyResponse, SideEffectResponse, SelfRecord, Question
 
 class TodaySerializer(serializers.ModelSerializer):
     class Meta:
         model = Today
         fields = '__all__'
 
-class SurveySerializer(serializers.ModelSerializer):
+class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Survey
+        model = Question
+        fields = ['id', 'question_text', 'question_type']
+
+class SurveyResponseSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=True)
+
+    class Meta:
+        model = SurveyResponse
         fields = ['id', 'question', 'answer']
 
-class SideEffectSerializer(serializers.ModelSerializer):
+class SideEffectResponseSerializer(serializers.ModelSerializer):
+    question = QuestionSerializer(read_only=True)
+
     class Meta:
-        model = SideEffect
+        model = SideEffectResponse
         fields = ['id', 'question', 'answer']
 
 class SelfRecordSerializer(serializers.ModelSerializer):
@@ -22,10 +31,10 @@ class SelfRecordSerializer(serializers.ModelSerializer):
         fields = ['id', 'created_at', 'content']
 
 class TodayDetailSerializer(serializers.ModelSerializer):
-    survey = SurveySerializer()
-    side_effect = SideEffectSerializer()
+    survey_responses = SurveyResponseSerializer(many=True, read_only=True)
+    side_effect_responses = SideEffectResponseSerializer(many=True, read_only=True)
     self_records = SelfRecordSerializer(many=True, read_only=True)
 
     class Meta:
         model = Today
-        fields = ['id', 'created_at', 'next_appointment_date', 'survey', 'side_effect', 'self_records']
+        fields = ['id', 'created_at', 'next_appointment_date', 'survey_responses', 'side_effect_responses', 'self_records']

@@ -1,5 +1,18 @@
 from django.db import models
 
+class Question(models.Model):
+    QUESTION_TYPES = [
+        ('survey', 'Survey'),
+        ('side_effect', 'Side Effect'),
+    ]
+    
+    question_text = models.CharField(max_length=255)
+    question_type = models.CharField(max_length=20, choices=QUESTION_TYPES)
+
+    def __str__(self):
+        return self.question_text
+
+
 class Today(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     next_appointment_date = models.DateField()
@@ -8,7 +21,7 @@ class Today(models.Model):
         return f"Today Entry - {self.created_at}"
 
 
-class Survey(models.Model):
+class SurveyResponse(models.Model):
     TODAY_SURVEY_ANSWERS = [
         ('1', '매우 나쁨'),
         ('2', '나쁨'),
@@ -16,16 +29,16 @@ class Survey(models.Model):
         ('4', '좋음'),
         ('5', '매우 좋음'),
     ]
-    
-    today = models.OneToOneField(Today, on_delete=models.CASCADE, related_name='survey')
-    question = models.CharField(max_length=255)
+
+    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_responses')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='survey_responses')
     answer = models.CharField(max_length=1, choices=TODAY_SURVEY_ANSWERS)
 
     def __str__(self):
-        return f"Survey - {self.question} : {self.answer}"
+        return f"Survey Response - {self.question.question_text} : {self.answer}"
 
 
-class SideEffect(models.Model):
+class SideEffectResponse(models.Model):
     SIDE_EFFECT_ANSWERS = [
         ('1', '전혀 없음'),
         ('2', '거의 없음'),
@@ -33,17 +46,17 @@ class SideEffect(models.Model):
         ('4', '꽤 있음'),
         ('5', '많이 있음'),
     ]
-    
-    today = models.OneToOneField(Today, on_delete=models.CASCADE, related_name='side_effect')
-    question = models.CharField(max_length=255)
+
+    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='side_effect_responses')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='side_effect_responses')
     answer = models.CharField(max_length=1, choices=SIDE_EFFECT_ANSWERS)
 
     def __str__(self):
-        return f"Side Effect - {self.question} : {self.answer}"
+        return f"Side Effect Response - {self.question.question_text} : {self.answer}"
 
 
 class SelfRecord(models.Model):
-    today = models.OneToOneField(Today, on_delete=models.CASCADE, related_name='self_record')
+    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='self_records')
     created_at = models.DateTimeField(auto_now_add=True)
     content = models.TextField()
 
