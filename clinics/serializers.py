@@ -1,5 +1,11 @@
 from rest_framework import serializers
 from .models import DrfClinics, DrfDrug
+from accounts.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'nickname']
 
 class DrfDrugSerializer(serializers.ModelSerializer):
     class Meta:
