@@ -3,7 +3,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Today, SelfRecord, Question
+from .models import Today, SelfRecord, Question, SurveyResponse, SideEffectResponse
 from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, SurveyResponseSerializer, SideEffectResponseSerializer
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -38,9 +38,15 @@ class QuestionListView(generics.ListAPIView):
 class SurveyResponseCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, today_id, question_id):
-        today = Today.objects.get(pk=today_id, owner=request.user)
-        question = Question.objects.get(pk=question_id)
+    def post(self, request):
+        today, created = Today.objects.get_or_create(
+            owner=request.user,
+            created_at__date=timezone.now().date(),
+            defaults={'next_appointment_date': None}
+        )
+
+        question_id = request.data.get('question_id')
+        question = Question.objects.get(pk=question_id, question_type='survey')
 
         serializer = SurveyResponseSerializer(data=request.data)
         if serializer.is_valid():
@@ -51,9 +57,15 @@ class SurveyResponseCreateView(APIView):
 class SideEffectResponseCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, today_id, question_id):
-        today = Today.objects.get(pk=today_id, owner=request.user)
-        question = Question.objects.get(pk=question_id)
+    def post(self, request):
+        today, created = Today.objects.get_or_create(
+            owner=request.user,
+            created_at__date=timezone.now().date(),
+            defaults={'next_appointment_date': None}
+        )
+        
+        question_id = request.data.get('question_id')
+        question = Question.objects.get(pk=question_id, question_type='side_effect')
 
         serializer = SideEffectResponseSerializer(data=request.data)
         if serializer.is_valid():
@@ -80,5 +92,9 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        today, created = Today.objects.get_or_create(owner=self.request.user, created_at__date=timezone.now().date())
+        today, created = Today.objects.get_or_create(
+            owner=self.request.user,
+            created_at__date=timezone.now().date(),
+            defaults={'next_appointment_date': None}
+        )
         serializer.save(today=today)
