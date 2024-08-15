@@ -1,11 +1,5 @@
 from rest_framework import serializers
 from .models import DrfClinics, DrfDrug
-from accounts.models import User
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'nickname']
 
 class DrfDrugSerializer(serializers.ModelSerializer):
     class Meta:
@@ -14,10 +8,14 @@ class DrfDrugSerializer(serializers.ModelSerializer):
 
 class DrfClinicsSerializer(serializers.ModelSerializer):
     drugs = DrfDrugSerializer(many=True)
+    nickname = serializers.SerializerMethodField()
 
     class Meta:
         model = DrfClinics
-        fields = ['clinicId', 'owner', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'drugs']
+        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'drugs']
+        
+    def get_nickname(self, obj):
+        return obj.owner.nickname
 
     def create(self, validated_data):
         drugs_data = validated_data.pop('drugs', [])

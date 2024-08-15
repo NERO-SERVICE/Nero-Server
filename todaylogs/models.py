@@ -37,7 +37,8 @@ class SurveyResponse(models.Model):
     answer = models.CharField(max_length=1, choices=TODAY_SURVEY_ANSWERS, null=True)
 
     def __str__(self):
-        return f"Survey Response - {self.question.question_text} : {self.answer}"
+        formatted_date = self.created_at.strftime('%Y-%m-%d %H:%M')
+        return f"Today Entry - {self.owner.nickname} - {formatted_date}"
 
 
 class SideEffectResponse(models.Model):
