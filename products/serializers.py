@@ -4,6 +4,7 @@ from accounts.models import User
 
 class DrfProductSerializer(serializers.ModelSerializer):
     imageUrls = serializers.SerializerMethodField()
+    nickname = serializers.SerializerMethodField()
 
     class Meta:
         model = DrfProduct
@@ -15,6 +16,7 @@ class DrfProductSerializer(serializers.ModelSerializer):
             'isFree',
             'imageUrls',
             'owner',
+            'nickname',
             'createdAt',
             'updatedAt',
             'viewCount',
@@ -28,3 +30,6 @@ class DrfProductSerializer(serializers.ModelSerializer):
     def get_imageUrls(self, obj):
         request = self.context.get('request')
         return [request.build_absolute_uri(image.file.url) for image in obj.imageFiles.all()]
+    
+    def get_nickname(self, obj):
+        return obj.owner.nickname
