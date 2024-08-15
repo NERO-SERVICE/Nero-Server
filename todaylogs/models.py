@@ -20,7 +20,7 @@ class Today(models.Model):
     next_appointment_date = models.DateField(null=True)
 
     def __str__(self):
-        return f"Today Entry - {self.user.username} - {self.created_at}"
+        return f"Today Entry - {self.owner.nickname} - {self.created_at}"
 
 
 class SurveyResponse(models.Model):
