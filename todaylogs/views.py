@@ -60,14 +60,20 @@ class SideEffectResponseCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class SelfRecordListCreateView(generics.ListCreateAPIView):
+class SelfRecordListView(generics.ListAPIView):
     serializer_class = SelfRecordSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        today_id = self.kwargs['today_id']
-        return SelfRecord.objects.filter(today_id=today_id, today__owner=self.request.user)
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
 
-    def perform_create(self, serializer):
-        today = Today.objects.get(pk=self.kwargs['today_id'], owner=self.request.user)
-        serializer.save(today=today)
+        queryset = SelfRecord.objects.filter(
+            today__owner=self.request.user,
+            created_at__year=year,
+            created_at__month=month,
+            created_at__day=day
+        )
+
+        return queryset
