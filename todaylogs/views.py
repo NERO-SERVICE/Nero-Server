@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from .models import Today, SelfRecord, Question
 from .serializers import TodaySerializer, SurveyResponseSerializer, SideEffectResponseSerializer, SelfRecordSerializer, TodayDetailSerializer, QuestionSerializer
 from rest_framework.permissions import IsAuthenticated
+from time import timezone
 
 class TodayListCreateView(generics.ListCreateAPIView):
     serializer_class = TodaySerializer
@@ -79,4 +80,5 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(today=None)
+        today, created = Today.objects.get_or_create(owner=self.request.user, created_at=timezone.now().date())
+        serializer.save(today=today)
