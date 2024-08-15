@@ -77,3 +77,7 @@ class SelfRecordListView(generics.ListAPIView):
         )
 
         return queryset
+    
+    def perform_create(self, serializer):
+        today_record = serializer.save()
+        return today_record
