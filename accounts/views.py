@@ -68,3 +68,14 @@ def login(request):
         return Response({'user': serializer.data}, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+def userinfo(request):
+    try:
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
