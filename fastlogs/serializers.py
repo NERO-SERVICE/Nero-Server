@@ -4,4 +4,6 @@ from .models import DailyLog
 class DailyLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyLog
-        fields = ['content']
+        fields = ['id', 'content', 'date']
+        read_only_fields = ['id', 'date']
+
