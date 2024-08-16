@@ -10,5 +10,4 @@ class DailyLog(models.Model):
         return f"{self.owner.nickname} - {self.date}"
 
     class Meta:
-        unique_together = ('owner', 'date')
         ordering = ['-date']
