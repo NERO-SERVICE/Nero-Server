@@ -10,6 +10,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 class CreateProductView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
         if not request.user.is_authenticated:
