@@ -44,7 +44,8 @@ class DrfProductSerializer(serializers.ModelSerializer):
         return obj.owner.nickname
     
     def create(self, validated_data):
-        image_files_data = validated_data.pop('imageFiles', [])
+        image_files_data = self.initial_data.getlist('imageFiles')
+        # image_files_data = validated_data.pop('imageFiles', [])
         likers_data = validated_data.pop('likers', None)
         logger.debug("Received image files: %s", image_files_data)
         
@@ -52,7 +53,7 @@ class DrfProductSerializer(serializers.ModelSerializer):
         
         for image_data in image_files_data:
             logger.debug("Saving image file: %s", image_data['file'])
-            ImageFile.objects.create(product=product, **image_data)
+            ImageFile.objects.create(product=product, file=image_data)
         
         if likers_data:
             product.likers.set(likers_data)
