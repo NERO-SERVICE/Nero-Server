@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from .models import DrfProduct, ImageFile
+import logging
+
+logger = logging.getLogger('django')
 
 class ImageFileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,12 +46,12 @@ class DrfProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         image_files_data = validated_data.pop('imageFiles', [])
         likers_data = validated_data.pop('likers', None)
+        logger.debug("Received image files: %s", image_files_data)
         
         product = DrfProduct.objects.create(**validated_data)
-        print("image_files_data:", image_files_data)
         
         for image_data in image_files_data:
-            print("Processing image_data:", image_data)
+            logger.debug("Saving image file: %s", image_data['file'])
             ImageFile.objects.create(product=product, **image_data)
         
         if likers_data:
