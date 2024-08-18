@@ -42,20 +42,30 @@ class DrfProductSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         image_files_data = validated_data.pop('imageFiles', [])
+        likers_data = validated_data.pop('likers', None)
+        
         product = DrfProduct.objects.create(**validated_data)
         
         for image_data in image_files_data:
             ImageFile.objects.create(product=product, **image_data)
         
+        if likers_data:
+            product.likers.set(likers_data)
+        
         return product
 
     def update(self, instance, validated_data):
         image_files_data = validated_data.pop('imageFiles', None)
+        likers_data = validated_data.pop('likers', None)
+        
         product = super().update(instance, validated_data)
 
         if image_files_data is not None:
             instance.imageFiles.all().delete() 
             for image_data in image_files_data:
                 ImageFile.objects.create(product=product, **image_data)
+
+        if likers_data:
+            product.likers.set(likers_data)
         
         return product

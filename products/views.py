@@ -10,9 +10,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 
 class CreateProductView(APIView):
     permission_classes = [IsAuthenticated]
-    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
         serializer = DrfProductSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(owner=request.user)
