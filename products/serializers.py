@@ -45,8 +45,10 @@ class DrfProductSerializer(serializers.ModelSerializer):
         likers_data = validated_data.pop('likers', None)
         
         product = DrfProduct.objects.create(**validated_data)
+        print("image_files_data:", image_files_data)
         
         for image_data in image_files_data:
+            print("Processing image_data:", image_data)
             ImageFile.objects.create(product=product, **image_data)
         
         if likers_data:
