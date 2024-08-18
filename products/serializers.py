@@ -52,7 +52,7 @@ class DrfProductSerializer(serializers.ModelSerializer):
         product = DrfProduct.objects.create(**validated_data)
         
         for image_data in image_files_data:
-            logger.debug("Saving image file: %s", image_data['file'])
+            logger.debug("Saving image file: %s", image_data)
             ImageFile.objects.create(product=product, file=image_data)
         
         if likers_data:
