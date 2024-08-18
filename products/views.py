@@ -5,17 +5,33 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import DrfProduct
 from .serializers import DrfProductSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
-# 제품 생성
+
 class CreateProductView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
         serializer = DrfProductSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=request.user)  # 로그인한 유저를 소유자로 설정
+            serializer.save(owner=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateProductView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
+
+    def put(self, request, id):
+        product = get_object_or_404(DrfProduct, id=id, owner=request.user) 
+        serializer = DrfProductSerializer(product, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # 특정 제품 조회
 class RetrieveProductView(APIView):
@@ -26,17 +42,6 @@ class RetrieveProductView(APIView):
         serializer = DrfProductSerializer(product, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# 제품 수정
-class UpdateProductView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request, id):
-        product = get_object_or_404(DrfProduct, id=id, owner=request.user)  # 유저가 소유한 제품인지 확인
-        serializer = DrfProductSerializer(product, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 제품 삭제
 class DeleteProductView(APIView):
