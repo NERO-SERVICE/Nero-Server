@@ -15,12 +15,18 @@ class CreateProductView(APIView):
     def post(self, request):
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 디버깅: request.data 확인
+        print("Request data:", request.data)
         
         serializer = DrfProductSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(owner=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            print("Serializer errors:", serializer.errors)  # 디버깅: serializer errors 출력
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UpdateProductView(APIView):
