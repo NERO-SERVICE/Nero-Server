@@ -107,6 +107,7 @@ class ConsumeSelectedDrugsView(APIView):
                     'drugId': drug.drugId,
                     'status': drug.status,
                     'number': drug.number,
+                    'initialNumber': drug.initialNumber,
                     'time': drug.time,
                     'allow': drug.allow
                 })

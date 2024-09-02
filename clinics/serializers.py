@@ -4,7 +4,7 @@ from .models import DrfClinics, DrfDrug
 class DrfDrugSerializer(serializers.ModelSerializer):
     class Meta:
         model = DrfDrug
-        fields = ['drugId', 'status', 'number', 'time', 'allow']
+        fields = ['drugId', 'status', 'number', 'initialNumber', 'time', 'allow']
 
 class DrfClinicsSerializer(serializers.ModelSerializer):
     drugs = DrfDrugSerializer(many=True)
@@ -21,7 +21,9 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
         drugs_data = validated_data.pop('drugs', [])
         clinic = DrfClinics.objects.create(**validated_data)
         for drug_data in drugs_data:
-            DrfDrug.objects.create(item=clinic, **drug_data)
+            drug = DrfDrug.objects.create(item=clinic, **drug_data)
+            drug.initialNumber = drug.number
+            drug.save()
         return clinic
 
     def update(self, instance, validated_data):
