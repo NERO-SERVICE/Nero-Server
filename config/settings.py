@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'clinics',
     'todaylogs',
     'fastlogs',
+    'news',
 ]
 
 SITE_ID = 1
