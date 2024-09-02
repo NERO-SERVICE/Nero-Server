@@ -29,12 +29,13 @@ class DrfDrug(models.Model):
         ('페로스핀 18mg', '페로스핀 18mg'),
     ])
     number = models.IntegerField(default=0)
+    initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
         ('morning', '아침'),
         ('lunch', '점심'),
         ('evening', '저녁'),
     ])
-    allow = models.BooleanField(default=True)  # 새로 추가된 필드
+    allow = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Drug {self.drugId} for {self.item.title}"
