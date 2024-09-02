@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
-# Create your models here.
 class DrfClinics(models.Model):
     clinicId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -15,8 +15,8 @@ class DrfClinics(models.Model):
         return self.title
     
     class Meta:
-        ordering = ['-updatedAt'] 
-    
+        ordering = ['-updatedAt']
+
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     item = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
@@ -34,6 +34,7 @@ class DrfDrug(models.Model):
         ('lunch', '점심'),
         ('evening', '저녁'),
     ])
+    allow = models.BooleanField(default=True)  # 새로 추가된 필드
 
     def __str__(self):
         return f"Drug {self.drugId} for {self.item.title}"
@@ -44,3 +45,7 @@ class DrfDrug(models.Model):
             self.save()
         else:
             raise ValueError("No more drugs left to consume.")
+    
+    def reset_allow(self):
+        self.allow = True
+        self.save()
