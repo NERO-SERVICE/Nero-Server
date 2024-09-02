@@ -8,21 +8,35 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         query = 'ADHD'
-        url = f'https://search.naver.com/search.naver?where=news&query={query}'
-        
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
+        base_url = f'https://search.naver.com/search.naver?where=news&query={query}'
+        headers = {'User-Agent': 'Mozilla/5.0'}
 
-        # 뉴스 기사들을 가져오기
-        news_items = soup.select('.news_tit')
+        news_count = 0
+        max_news_count = 100
+        page = 1
 
-        for item in news_items:
-            title = item.get_text()
-            link = item['href']
+        while news_count < max_news_count:
+            url = f'{base_url}&start={((page - 1) * 10) + 1}'
+            response = requests.get(url, headers=headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
 
-            # 이미 존재하는 뉴스 기사를 저장하지 않음
-            if not NewsArticle.objects.filter(link=link).exists():
-                NewsArticle.objects.create(title=title, link=link)
-                self.stdout.write(self.style.SUCCESS(f'Saved: {title}'))
+            news_items = soup.select('.news_tit')
 
-        self.stdout.write(self.style.SUCCESS('Crawling completed successfully'))
+            if not news_items:
+                break  # 더 이상 뉴스가 없으면 중단
+
+            for item in news_items:
+                if news_count >= max_news_count:
+                    break
+
+                title = item.get_text()
+                link = item['href']
+
+                if not NewsArticle.objects.filter(link=link).exists():
+                    NewsArticle.objects.create(title=title, link=link)
+                    news_count += 1
+                    self.stdout.write(self.style.SUCCESS(f'Saved: {title}'))
+
+            page += 1
+
+        self.stdout.write(self.style.SUCCESS(f'Crawling completed successfully. {news_count} news articles were saved.'))
