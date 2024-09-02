@@ -37,3 +37,10 @@ class DrfDrug(models.Model):
 
     def __str__(self):
         return f"Drug {self.drugId} for {self.item.title}"
+    
+    def consume_one(self):
+        if self.number > 0:
+            self.number -= 1
+            self.save()
+        else:
+            raise ValueError("No more drugs left to consume.")
