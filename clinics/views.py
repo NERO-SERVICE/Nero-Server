@@ -7,8 +7,7 @@ from .models import DrfClinics, DrfDrug
 from .serializers import DrfClinicsSerializer, DrfDrugSerializer
 from django.utils import timezone
 
-
-# 제품 생성
+# 클리닉 생성
 class CreateClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -19,37 +18,37 @@ class CreateClinicView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# 특정 제품 조회
+# 특정 클리닉 조회
 class RetrieveClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, clinicId):
-        clinics = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 제품인지 확인
-        serializer = DrfClinicsSerializer(clinics, context={'request': request})
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
+        serializer = DrfClinicsSerializer(clinic, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# 제품 수정
+# 클리닉 수정
 class UpdateClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, clinicId):
-        clinics = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 제품인지 확인
-        serializer = DrfClinicsSerializer(clinics, data=request.data, partial=True)
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
+        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# 제품 삭제
+# 클리닉 삭제
 class DeleteClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, clinicId):
-        clinics = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 제품인지 확인
-        clinics.delete()
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
+        clinic.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# 사용자가 소유한 모든 제품 리스트 조회
+# 사용자가 소유한 모든 클리닉 리스트 조회
 class ListClinicsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -61,12 +60,7 @@ class ListClinicsView(APIView):
 
         serializer = DrfClinicsSerializer(clinics, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    def perform_destroy(self, instance):
-        instance.drugs.all().delete()
-        instance.delete()
-        
-        
+
 class ConsumeSelectedDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 

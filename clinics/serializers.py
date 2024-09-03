@@ -12,7 +12,7 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DrfClinics
-        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'drugs']
+        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'description', 'drugs', 'clinicLatitude', 'clinicLongitude', 'locationLabel']  # 'description' 추가
         
     def get_nickname(self, obj):
         return obj.owner.nickname
@@ -31,8 +31,12 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
         
         # 클리닉 기본 정보 업데이트
         instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
         instance.recentDay = validated_data.get('recentDay', instance.recentDay)
         instance.nextDay = validated_data.get('nextDay', instance.nextDay)
+        instance.clinicLatitude = validated_data.get('clinicLatitude', instance.clinicLatitude)
+        instance.clinicLongitude = validated_data.get('clinicLongitude', instance.clinicLongitude)
+        instance.locationLabel = validated_data.get('locationLabel', instance.locationLabel)
         instance.save()
 
         # 기존 drugs 업데이트 또는 새로 추가
