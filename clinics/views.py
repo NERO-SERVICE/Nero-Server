@@ -121,7 +121,8 @@ class ListDrugsView(APIView):
 
 # DrfDrugArchive 리스트 조회
 class ListDrugArchivesView(APIView):
-    
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         drug_archives = DrfDrugArchive.objects.all()
         serializer = DrfDrugArchiveSerializer(drug_archives, many=True)
