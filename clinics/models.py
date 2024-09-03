@@ -37,9 +37,9 @@ class DrfDrug(models.Model):
     number = models.IntegerField(default=0)
     initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
-        ('morning', '아침'),
-        ('lunch', '점심'),
-        ('evening', '저녁'),
+        ('아침', '아침'),
+        ('점심', '점심'),
+        ('저녁', '저녁'),
     ])
     allow = models.BooleanField(default=True)
 
