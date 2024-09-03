@@ -12,7 +12,7 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DrfClinics
-        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'description', 'drugs', 'clinicLatitude', 'clinicLongitude', 'locationLabel']  # 'description' 추가
+        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'description', 'drugs', 'clinicLatitude', 'clinicLongitude', 'locationLabel']
         
     def get_nickname(self, obj):
         return obj.owner.nickname
