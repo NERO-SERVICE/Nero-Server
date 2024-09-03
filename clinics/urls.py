@@ -7,7 +7,7 @@ from .views import (
     DeleteClinicView,
     ListDrugsView,
     ConsumeSelectedDrugsView,
-    ListDrugArchivesView,
+    ListDrugArchiveView,
 )
 
 app_name = "clinics"
@@ -20,5 +20,5 @@ urlpatterns = [
     path('<int:clinicId>/delete/', DeleteClinicView.as_view(), name='delete_clinic'),
     path('<int:clinicId>/drugs/', ListDrugsView.as_view(), name='list_drugs'),
     path('drugs/consume/', ConsumeSelectedDrugsView.as_view(), name='consume_selected_drugs'), 
-    path('drugs/archives/', ListDrugArchivesView.as_view(), name='list_drug_archives'),
+    path('drugs/archives/', ListDrugArchiveView.as_view(), name='list_drug_archives'),
 ]
