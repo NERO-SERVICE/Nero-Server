@@ -107,7 +107,7 @@ class ListDrugsView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # DrfDrugArchive 리스트 조회
-class ListDrugArchivesView(APIView):
+class ListDrugArchiveView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
