@@ -48,19 +48,6 @@ class DeleteClinicView(APIView):
         clinic.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-# 사용자가 소유한 모든 클리닉 리스트 조회
-class ListClinicsView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        clinics = DrfClinics.objects.filter(owner=request.user)
-        
-        if not clinics.exists():
-            return Response({'detail': 'No clinics found for this user.'}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = DrfClinicsSerializer(clinics, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
 class ConsumeSelectedDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -87,11 +74,11 @@ class ConsumeSelectedDrugsView(APIView):
             
             # number가 0이면 소비할 수 없도록 방지
             if drug.number == 0:
-                return Response({'error': f'Drug {drug.status} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.drugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
 
             # allow가 False이면 소비할 수 없도록 방지
             if not drug.allow:
-                return Response({'error': f'Drug {drug.status} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.drugArchive.drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 drug.consume_one()
@@ -99,7 +86,7 @@ class ConsumeSelectedDrugsView(APIView):
                 drug.save()
                 consumed_drugs.append({
                     'drugId': drug.drugId,
-                    'status': drug.status,
+                    'drugName': drug.drugArchive.drugName,
                     'number': drug.number,
                     'initialNumber': drug.initialNumber,
                     'time': drug.time,
@@ -109,7 +96,7 @@ class ConsumeSelectedDrugsView(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
-    
+
 class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -120,6 +107,14 @@ class ListDrugsView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # DrfDrugArchive 리스트 조회
+class ListDrugArchivesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        drug_archives = DrfDrugArchive.objects.all()
+        serializer = DrfDrugArchiveSerializer(drug_archives, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class ListClinicsView(APIView):
     permission_classes = [IsAuthenticated]
 
