@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import DrfClinics, DrfDrug
-from .serializers import DrfClinicsSerializer, DrfDrugSerializer
+from .models import DrfClinics, DrfDrug, DrfDrugArchive
+from .serializers import DrfClinicsSerializer, DrfDrugSerializer, DrfDrugArchiveSerializer
 from django.utils import timezone
 
 # 클리닉 생성
@@ -117,4 +117,13 @@ class ListDrugsView(APIView):
         clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
         drugs = DrfDrug.objects.filter(item=clinic)
         serializer = DrfDrugSerializer(drugs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# DrfDrugArchive 리스트 조회
+class ListDrugArchivesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        drug_archives = DrfDrugArchive.objects.all()
+        serializer = DrfDrugArchiveSerializer(drug_archives, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
