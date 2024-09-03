@@ -1,6 +1,13 @@
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
+
+class DrfDrugArchive(models.Model):
+    drugName = models.CharField(max_length=100)
+    target = models.CharField(max_length=100, null=True, blank=True)
+    capacity = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return self.drugName
 
 class DrfClinics(models.Model):
     clinicId = models.AutoField(primary_key=True)
@@ -21,30 +28,21 @@ class DrfClinics(models.Model):
     class Meta:
         ordering = ['-updatedAt']
 
-        ordering = ['-updatedAt']
-
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     item = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
-    status = models.CharField(max_length=50, choices=[
-        ('콘서타 18mg', '콘서타 18mg'),
-        ('콘서타 27mg', '콘서타 27mg'),
-        ('콘서타 36mg', '콘서타 36mg'),
-        ('폭세틴 20mg', '폭세틴 20mg'),
-        ('메디카넷 18mg', '메디카넷 18mg'),
-        ('페로스핀 18mg', '페로스핀 18mg'),
-    ])
+    drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE)
     number = models.IntegerField(default=0)
     initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
-        ('아침', '아침'),
-        ('점심', '점심'),
-        ('저녁', '저녁'),
+        ('morning', '아침'),
+        ('lunch', '점심'),
+        ('evening', '저녁'),
     ])
     allow = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Drug {self.drugId} for {self.item.title}"
+        return f"{self.drugArchive.drugName} for {self.item.title}"
     
     def consume_one(self):
         if self.number > 0:
