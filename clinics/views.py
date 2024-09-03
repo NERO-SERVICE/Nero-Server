@@ -120,10 +120,17 @@ class ListDrugsView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # DrfDrugArchive 리스트 조회
-class ListDrugArchivesView(APIView):
+class ListClinicsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        drug_archives = DrfDrugArchive.objects.all()
-        serializer = DrfDrugArchiveSerializer(drug_archives, many=True)
+        if request.user.is_anonymous:
+            return Response({'detail': 'Authentication credentials were not provided.'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        clinics = DrfClinics.objects.filter(owner=request.user)
+        
+        if not clinics.exists():
+            return Response({'detail': 'No clinics found for this user.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = DrfClinicsSerializer(clinics, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
