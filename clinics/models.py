@@ -10,11 +10,17 @@ class DrfClinics(models.Model):
     createdAt = models.DateTimeField()
     updatedAt = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
+    clinicLatitude = models.FloatField(null=True, blank=True)
+    clinicLongitude = models.FloatField(null=True, blank=True)
+    locationLabel = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     
     def __str__(self):
         return self.title
     
     class Meta:
+        ordering = ['-updatedAt']
+
         ordering = ['-updatedAt']
 
 class DrfDrug(models.Model):
