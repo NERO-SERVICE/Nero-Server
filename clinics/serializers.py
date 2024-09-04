@@ -6,12 +6,56 @@ class DrfDrugArchiveSerializer(serializers.ModelSerializer):
         model = DrfDrugArchive
         fields = ['id', 'drugName', 'target', 'capacity']
 
+    def create(self, validated_data):
+        # 중복된 drugName이 있는지 확인 후 없으면 새로 생성
+        drug_archive, created = DrfDrugArchive.objects.get_or_create(
+            drugName=validated_data['drugName'],
+            defaults={'target': validated_data.get('target'), 'capacity': validated_data.get('capacity')}
+        )
+        return drug_archive
+
 class DrfDrugSerializer(serializers.ModelSerializer):
     drugArchive = DrfDrugArchiveSerializer(many=True)
 
     class Meta:
         model = DrfDrug
         fields = ['drugId', 'drugArchive', 'number', 'initialNumber', 'time', 'allow']
+
+    def create(self, validated_data):
+        drug_archives_data = validated_data.pop('drugArchive')
+        drug = DrfDrug.objects.create(**validated_data)
+        for drug_archive_data in drug_archives_data:
+            drug_archive = DrfDrugArchive.objects.get_or_create(
+                id=drug_archive_data.get('id', None),
+                defaults={
+                    'drugName': drug_archive_data.get('drugName'),
+                    'target': drug_archive_data.get('target'),
+                    'capacity': drug_archive_data.get('capacity')
+                }
+            )[0]
+            drug.drugArchive.add(drug_archive)
+        return drug
+
+    def update(self, instance, validated_data):
+        drug_archives_data = validated_data.pop('drugArchive')
+        instance.number = validated_data.get('number', instance.number)
+        instance.time = validated_data.get('time', instance.time)
+        instance.allow = validated_data.get('allow', instance.allow)
+        instance.save()
+
+        instance.drugArchive.clear()
+        for drug_archive_data in drug_archives_data:
+            drug_archive = DrfDrugArchive.objects.get_or_create(
+                id=drug_archive_data.get('id', None),
+                defaults={
+                    'drugName': drug_archive_data.get('drugName'),
+                    'target': drug_archive_data.get('target'),
+                    'capacity': drug_archive_data.get('capacity')
+                }
+            )[0]
+            instance.drugArchive.add(drug_archive)
+
+        return instance
 
 class DrfClinicsSerializer(serializers.ModelSerializer):
     drugs = DrfDrugSerializer(many=True)
@@ -20,7 +64,7 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DrfClinics
         fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'description', 'drugs', 'clinicLatitude', 'clinicLongitude', 'locationLabel']
-        
+
     def get_nickname(self, obj):
         return obj.owner.nickname
 
@@ -31,7 +75,14 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
             drug_archives_data = drug_data.pop('drugArchive')
             drug = DrfDrug.objects.create(item=clinic, **drug_data)
             for drug_archive_data in drug_archives_data:
-                drug_archive = DrfDrugArchive.objects.get(id=drug_archive_data['id'])
+                drug_archive = DrfDrugArchive.objects.get_or_create(
+                    id=drug_archive_data.get('id', None),
+                    defaults={
+                        'drugName': drug_archive_data.get('drugName'),
+                        'target': drug_archive_data.get('target'),
+                        'capacity': drug_archive_data.get('capacity')
+                    }
+                )[0]
                 drug.drugArchive.add(drug_archive)
             drug.initialNumber = drug.number
             drug.save()
@@ -39,8 +90,6 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         drugs_data = validated_data.pop('drugs', [])
-        
-        # 클리닉 기본 정보 업데이트
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.recentDay = validated_data.get('recentDay', instance.recentDay)
@@ -58,23 +107,33 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
             drug_id = drug_data.get('drugId')
             drug_archives_data = drug_data.pop('drugArchive')
             if drug_id in existing_drug_ids:
-                # 기존 약물 업데이트
                 drug = DrfDrug.objects.get(drugId=drug_id, item=instance)
-                drug.drugArchive.clear()  # 기존 연결 삭제
+                drug.drugArchive.clear()
                 for drug_archive_data in drug_archives_data:
-                    drug_archive = DrfDrugArchive.objects.get(id=drug_archive_data['id'])
+                    drug_archive = DrfDrugArchive.objects.get_or_create(
+                        id=drug_archive_data.get('id', None),
+                        defaults={
+                            'drugName': drug_archive_data.get('drugName'),
+                            'target': drug_archive_data.get('target'),
+                            'capacity': drug_archive_data.get('capacity')
+                        }
+                    )[0]
                     drug.drugArchive.add(drug_archive)
                 drug.number = drug_data.get('number', drug.number)
-                drug.time = drug_data.get('time', drug.time)
                 drug.save()
             else:
-                # 새로운 약물 추가
                 drug = DrfDrug.objects.create(item=instance, **drug_data)
                 for drug_archive_data in drug_archives_data:
-                    drug_archive = DrfDrugArchive.objects.get(id=drug_archive_data['id'])
+                    drug_archive = DrfDrugArchive.objects.get_or_create(
+                        id=drug_archive_data.get('id', None),
+                        defaults={
+                            'drugName': drug_archive_data.get('drugName'),
+                            'target': drug_archive_data.get('target'),
+                            'capacity': drug_archive_data.get('capacity')
+                        }
+                    )[0]
                     drug.drugArchive.add(drug_archive)
 
-        # 삭제할 약물들
         for drug in instance.drugs.all():
             if drug.drugId not in new_drug_ids:
                 drug.delete()
