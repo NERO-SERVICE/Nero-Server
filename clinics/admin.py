@@ -5,18 +5,21 @@ from .models import DrfClinics, DrfDrug, DrfDrugArchive
 class DrfClinicsAdmin(admin.ModelAdmin):
     list_display = ['clinicId', 'owner', 'title', 'description', 'createdAt', 'updatedAt']
     search_fields = ['title', 'description', 'owner__username']
+    list_filter = ['createdAt', 'updatedAt', 'owner']
 
 @admin.register(DrfDrug)
 class DrfDrugAdmin(admin.ModelAdmin):
-    list_display = ['drugId', 'item', 'get_drug_archive_name', 'number', 'time', 'allow']
+    list_display = ['drugId', 'item', 'display_drug_archive_name', 'number', 'time', 'allow']
     search_fields = ['drugArchive__drugName', 'item__title']
+    list_filter = ['allow', 'time']
 
-    def get_drug_archive_name(self, obj):
+    def display_drug_archive_name(self, obj):
         return obj.drugArchive.drugName
     
-    get_drug_archive_name.short_description = 'Drug Name'
+    display_drug_archive_name.short_description = 'Drug Name'
 
 @admin.register(DrfDrugArchive)
 class DrfDrugArchiveAdmin(admin.ModelAdmin):
     list_display = ['id', 'drugName', 'target', 'capacity']
     search_fields = ['drugName', 'target', 'capacity']
+    list_filter = ['target']

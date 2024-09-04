@@ -21,6 +21,7 @@ class DrfClinics(models.Model):
     clinicLongitude = models.FloatField(null=True, blank=True)
     locationLabel = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    drugArchives = models.ManyToManyField(DrfDrugArchive, related_name='clinics')
     
     def __str__(self):
         return self.title
