@@ -41,3 +41,4 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
                 drug_archive = drug_data.pop('drugArchive')
                 DrfDrug.objects.create(item=instance, drugArchive=drug_archive, **drug_data)
         return instance
+    
