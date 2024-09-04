@@ -14,18 +14,74 @@ class CreateClinicView(APIView):
     def post(self, request):
         serializer = DrfClinicsSerializer(data=request.data)
         if serializer.is_valid():
+            # 클리닉 생성
             clinic = serializer.save(owner=request.user)
             
-            # 각 약물에 대해 drugArchive를 처리
+            # 약물 및 약물 아카이브 처리
             for drug_data in request.data.get('drugs', []):
+                drug_archives_data = drug_data.pop('drugArchive')
+                
+                # 약물 생성
                 drug = DrfDrug.objects.create(item=clinic, **drug_data)
-                for archive_data in drug_data.get('drugArchive', []):
-                    drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
+
+                # 약물 아카이브 처리
+                for archive_data in drug_archives_data:
+                    if 'id' in archive_data and archive_data['id'] is not None:
+                        drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
+                    else:
+                        drug_archive = DrfDrugArchive.objects.create(
+                            drugName=archive_data['drugName'],
+                            target=archive_data.get('target'),
+                            capacity=archive_data.get('capacity')
+                        )
                     drug.drugArchive.add(drug_archive)
+                
                 drug.initialNumber = drug.number
                 drug.save()
                 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# 클리닉 수정
+class UpdateClinicView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, clinicId):
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
+        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            # 클리닉 업데이트
+            clinic = serializer.save()
+
+            # 약물 업데이트 처리
+            for drug_data in request.data.get('drugs', []):
+                drug_archives_data = drug_data.pop('drugArchive')
+
+                if 'drugId' in drug_data and drug_data['drugId'] is not None:
+                    # 기존 약물 업데이트
+                    drug = DrfDrug.objects.get(drugId=drug_data['drugId'], item=clinic)
+                    drug.drugArchive.clear()  # 기존 아카이브 관계 삭제
+                else:
+                    # 새로운 약물 생성
+                    drug = DrfDrug.objects.create(item=clinic, **drug_data)
+
+                # 약물 아카이브 처리
+                for archive_data in drug_archives_data:
+                    if 'id' in archive_data and archive_data['id'] is not None:
+                        drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
+                    else:
+                        drug_archive = DrfDrugArchive.objects.create(
+                            drugName=archive_data['drugName'],
+                            target=archive_data.get('target'),
+                            capacity=archive_data.get('capacity')
+                        )
+                    drug.drugArchive.add(drug_archive)
+                
+                drug.number = drug_data.get('number', drug.number)
+                drug.save()
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -37,31 +93,6 @@ class RetrieveClinicView(APIView):
         clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
         serializer = DrfClinicsSerializer(clinic, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-# 클리닉 수정
-class UpdateClinicView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def put(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
-        
-        if serializer.is_valid():
-            clinic = serializer.save()
-
-            # 기존 약물의 drugArchive 관계를 업데이트
-            for drug_data in request.data.get('drugs', []):
-                drug = get_object_or_404(DrfDrug, drugId=drug_data['drugId'], item=clinic)
-                drug.drugArchive.clear()  # 기존 관계 삭제
-                for archive_data in drug_data.get('drugArchive', []):
-                    drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
-                    drug.drugArchive.add(drug_archive)
-                drug.number = drug_data.get('number', drug.number)
-                drug.save()
-                
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 # 클리닉 삭제
 class DeleteClinicView(APIView):
