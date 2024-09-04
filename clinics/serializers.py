@@ -7,7 +7,7 @@ class DrfDrugArchiveSerializer(serializers.ModelSerializer):
         fields = ['id', 'drugName', 'target', 'capacity']
 
 class DrfDrugSerializer(serializers.ModelSerializer):
-    drugArchive = DrfDrugArchiveSerializer(many=True)
+    drugArchive = DrfDrugArchiveSerializer(many=False)
 
     class Meta:
         model = DrfDrug
