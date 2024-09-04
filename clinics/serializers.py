@@ -7,14 +7,14 @@ class DrfDrugArchiveSerializer(serializers.ModelSerializer):
         fields = ['id', 'drugName', 'target', 'capacity']
 
 class DrfDrugSerializer(serializers.ModelSerializer):
-    drugArchive = DrfDrugArchiveSerializer(many=False)
+    drugArchive = serializers.PrimaryKeyRelatedField(queryset=DrfDrugArchive.objects.all())
 
     class Meta:
         model = DrfDrug
         fields = ['drugId', 'drugArchive', 'number', 'initialNumber', 'time', 'allow']
 
 class DrfClinicsSerializer(serializers.ModelSerializer):
-    drugs = DrfDrugSerializer(many=True)
+    drugs = DrfDrugSerializer(many=True) 
     nickname = serializers.SerializerMethodField()
 
     class Meta:
@@ -23,3 +23,21 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
 
     def get_nickname(self, obj):
         return obj.owner.nickname
+
+    def create(self, validated_data):
+        drugs_data = validated_data.pop('drugs')
+        clinic = DrfClinics.objects.create(**validated_data)
+        for drug_data in drugs_data:
+            drug_archive = drug_data.pop('drugArchive')
+            DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+        return clinic
+    
+    def update(self, instance, validated_data):
+        drugs_data = validated_data.pop('drugs', None)
+        instance = super().update(instance, validated_data)
+        if drugs_data:
+            instance.drugs.all().delete()
+            for drug_data in drugs_data:
+                drug_archive = drug_data.pop('drugArchive')
+                DrfDrug.objects.create(item=instance, drugArchive=drug_archive, **drug_data)
+        return instance
