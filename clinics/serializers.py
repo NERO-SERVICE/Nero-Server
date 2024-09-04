@@ -23,3 +23,20 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
 
     def get_nickname(self, obj):
         return obj.owner.nickname
+    
+    def create(self, validated_data):
+        drugs_data = validated_data.pop('drugs')
+        clinic = DrfClinics.objects.create(**validated_data)
+        for drug_data in drugs_data:
+            DrfDrug.objects.create(item=clinic, **drug_data)
+        return clinic
+    
+    def update(self, instance, validated_data):
+        drugs_data = validated_data.pop('drugs', None)
+        instance = super().update(instance, validated_data)
+        if drugs_data:
+            # 기존 drugs 삭제 후 새로 추가
+            instance.drugs.all().delete()
+            for drug_data in drugs_data:
+                DrfDrug.objects.create(item=instance, **drug_data)
+        return instance

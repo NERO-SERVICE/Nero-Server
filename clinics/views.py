@@ -14,18 +14,18 @@ class CreateClinicView(APIView):
 
     @transaction.atomic
     def post(self, request):
-        clinic_data = request.data.copy()
-        drugs_data = clinic_data.pop('drugs', [])
-        
-        clinic = DrfClinics.objects.create(owner=request.user, **clinic_data)
-        
-        for drug_data in drugs_data:
-            drug_archive_id = drug_data.pop('drugArchive')
-            drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-            DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
-        
-        serializer = DrfClinicsSerializer(clinic)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = DrfClinicsSerializer(data=request.data)
+        if serializer.is_valid():
+            clinic = serializer.save(owner=request.user)
+            
+            # 약물 데이터를 처리하는 부분
+            for drug_data in request.data.get('drugs', []):
+                drug_archive_id = drug_data.pop('drugArchive')
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
+                DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 클리닉 수정
 class UpdateClinicView(APIView):
@@ -34,24 +34,21 @@ class UpdateClinicView(APIView):
     @transaction.atomic
     def put(self, request, clinicId):
         clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        clinic_data = request.data.copy()
-        drugs_data = clinic_data.pop('drugs', [])
-        
-        # 클리닉 정보 업데이트
-        for attr, value in clinic_data.items():
-            setattr(clinic, attr, value)
-        clinic.save()
-        
-        # 기존 약물 삭제 후 새롭게 추가
-        DrfDrug.objects.filter(item=clinic).delete()
-        
-        for drug_data in drugs_data:
-            drug_archive_id = drug_data.pop('drugArchive')
-            drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-            DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
-        
-        serializer = DrfClinicsSerializer(clinic)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            clinic = serializer.save()
+
+            # 기존 약물 삭제 후 새롭게 추가
+            DrfDrug.objects.filter(item=clinic).delete()
+
+            for drug_data in request.data.get('drugs', []):
+                drug_archive_id = drug_data.pop('drugArchive')
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
+                DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+            
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 특정 클리닉 조회
 class RetrieveClinicView(APIView):
