@@ -8,13 +8,13 @@ class DrfClinicsAdmin(admin.ModelAdmin):
 
 @admin.register(DrfDrug)
 class DrfDrugAdmin(admin.ModelAdmin):
-    list_display = ['drugId', 'item', 'drugArchive', 'number', 'time', 'allow']
+    list_display = ['drugId', 'item', 'get_drug_archive_name', 'number', 'time', 'allow']
     search_fields = ['drugArchive__drugName', 'item__title']
-    
-    def drugArchive(self, obj):
+
+    def get_drug_archive_name(self, obj):
         return obj.drugArchive.drugName
     
-    drugArchive.short_description = 'Drug Name'
+    get_drug_archive_name.short_description = 'Drug Name'
 
 @admin.register(DrfDrugArchive)
 class DrfDrugArchiveAdmin(admin.ModelAdmin):
