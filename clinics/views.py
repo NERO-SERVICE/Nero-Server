@@ -14,28 +14,16 @@ class CreateClinicView(APIView):
     def post(self, request):
         serializer = DrfClinicsSerializer(data=request.data)
         if serializer.is_valid():
-            # 클리닉 생성
             clinic = serializer.save(owner=request.user)
             
-            # 약물 및 약물 아카이브 처리
             for drug_data in request.data.get('drugs', []):
-                drug_archives_data = drug_data.pop('drugArchive')
+                drug_archive_data = drug_data.pop('drugArchive')  # 단일 객체 처리
                 
-                # 약물 생성
                 drug = DrfDrug.objects.create(item=clinic, **drug_data)
 
-                # 약물 아카이브 처리
-                for archive_data in drug_archives_data:
-                    if 'id' in archive_data and archive_data['id'] is not None:
-                        drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
-                    else:
-                        drug_archive = DrfDrugArchive.objects.create(
-                            drugName=archive_data['drugName'],
-                            target=archive_data.get('target'),
-                            capacity=archive_data.get('capacity')
-                        )
-                    drug.drugArchive.add(drug_archive)
-                
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
+                drug.drugArchive.add(drug_archive)
+
                 drug.initialNumber = drug.number
                 drug.save()
                 
@@ -51,33 +39,29 @@ class UpdateClinicView(APIView):
         serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
         
         if serializer.is_valid():
-            # 클리닉 업데이트
             clinic = serializer.save()
 
-            # 약물 업데이트 처리
             for drug_data in request.data.get('drugs', []):
-                drug_archives_data = drug_data.pop('drugArchive')
+                drug_archive_data = drug_data.pop('drugArchive')
 
                 if 'drugId' in drug_data and drug_data['drugId'] is not None:
-                    # 기존 약물 업데이트
                     drug = DrfDrug.objects.get(drugId=drug_data['drugId'], item=clinic)
-                    drug.drugArchive.clear()  # 기존 아카이브 관계 삭제
+                    drug.drugArchive.clear()
                 else:
-                    # 새로운 약물 생성
                     drug = DrfDrug.objects.create(item=clinic, **drug_data)
 
-                # 약물 아카이브 처리
-                for archive_data in drug_archives_data:
-                    if 'id' in archive_data and archive_data['id'] is not None:
-                        drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
-                    else:
-                        drug_archive = DrfDrugArchive.objects.create(
-                            drugName=archive_data['drugName'],
-                            target=archive_data.get('target'),
-                            capacity=archive_data.get('capacity')
-                        )
+                # drugArchive 처리
+                if 'id' in drug_archive_data and drug_archive_data['id'] is not None:
+                    drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
                     drug.drugArchive.add(drug_archive)
-                
+                else:
+                    drug_archive = DrfDrugArchive.objects.create(
+                        drugName=drug_archive_data['drugName'],
+                        target=drug_archive_data.get('target'),
+                        capacity=drug_archive_data.get('capacity')
+                    )
+                    drug.drugArchive.add(drug_archive)
+
                 drug.number = drug_data.get('number', drug.number)
                 drug.save()
 
