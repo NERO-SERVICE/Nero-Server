@@ -14,9 +14,20 @@ class CreateClinicView(APIView):
     def post(self, request):
         serializer = DrfClinicsSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=request.user)
+            clinic = serializer.save(owner=request.user)
+            
+            # 각 약물에 대해 drugArchive를 처리
+            for drug_data in request.data.get('drugs', []):
+                drug = DrfDrug.objects.create(item=clinic, **drug_data)
+                for archive_data in drug_data.get('drugArchive', []):
+                    drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
+                    drug.drugArchive.add(drug_archive)
+                drug.initialNumber = drug.number
+                drug.save()
+                
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # 특정 클리닉 조회
 class RetrieveClinicView(APIView):
@@ -32,12 +43,25 @@ class UpdateClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
         serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
+        
         if serializer.is_valid():
-            serializer.save()
+            clinic = serializer.save()
+
+            # 기존 약물의 drugArchive 관계를 업데이트
+            for drug_data in request.data.get('drugs', []):
+                drug = get_object_or_404(DrfDrug, drugId=drug_data['drugId'], item=clinic)
+                drug.drugArchive.clear()  # 기존 관계 삭제
+                for archive_data in drug_data.get('drugArchive', []):
+                    drug_archive = get_object_or_404(DrfDrugArchive, id=archive_data['id'])
+                    drug.drugArchive.add(drug_archive)
+                drug.number = drug_data.get('number', drug.number)
+                drug.save()
+                
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # 클리닉 삭제
 class DeleteClinicView(APIView):
@@ -74,7 +98,6 @@ class ConsumeSelectedDrugsView(APIView):
         today_start = korea_time.replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow_start = today_start + timezone.timedelta(days=1)
         
-        # 자정을 지나면 약물의 allow 상태를 초기화
         if korea_time >= tomorrow_start:
             drugs_to_reset = DrfDrug.objects.filter(item__owner=request.user, allow=False)
             for drug in drugs_to_reset:
@@ -85,21 +108,19 @@ class ConsumeSelectedDrugsView(APIView):
         for drug_id in drug_ids:
             drug = get_object_or_404(DrfDrug, drugId=drug_id, item__owner=request.user)
             
-            # number가 0이면 소비할 수 없도록 방지
             if drug.number == 0:
-                return Response({'error': f'Drug {drug.status} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.drugArchive.first().drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # allow가 False이면 소비할 수 없도록 방지
             if not drug.allow:
-                return Response({'error': f'Drug {drug.status} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.drugArchive.first().drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 drug.consume_one()
-                drug.allow = False  # 약물이 소모되면 allow를 False로 설정
+                drug.allow = False
                 drug.save()
                 consumed_drugs.append({
                     'drugId': drug.drugId,
-                    'status': drug.status,
+                    'status': drug.drugArchive.first().drugName,
                     'number': drug.number,
                     'initialNumber': drug.initialNumber,
                     'time': drug.time,
