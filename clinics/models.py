@@ -31,7 +31,7 @@ class DrfClinics(models.Model):
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     item = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
-    drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE, default=1)
+    drugArchive = models.ManyToManyField(DrfDrugArchive)
     number = models.IntegerField(default=0)
     initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
@@ -42,7 +42,7 @@ class DrfDrug(models.Model):
     allow = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.drugArchive.drugName} for {self.item.title}"
+        return f"Drugs for {self.item.title}"
     
     def consume_one(self):
         if self.number > 0:
