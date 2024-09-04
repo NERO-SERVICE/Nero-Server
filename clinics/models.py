@@ -31,7 +31,7 @@ class DrfClinics(models.Model):
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     item = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
-    drugArchive = models.ManyToManyField(DrfDrugArchive)
+    drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE)
     number = models.IntegerField(default=0)
     initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[

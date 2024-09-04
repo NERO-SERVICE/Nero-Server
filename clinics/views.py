@@ -17,18 +17,16 @@ class CreateClinicView(APIView):
             clinic = serializer.save(owner=request.user)
             
             for drug_data in request.data.get('drugs', []):
-                drug_archive_data = drug_data.pop('drugArchive')  # 단일 객체 처리
-                
-                drug = DrfDrug.objects.create(item=clinic, **drug_data)
+                drug_archive_data = drug_data.pop('drugArchive')  # drugArchive는 단일 객체
 
                 drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
-                drug.drugArchive.add(drug_archive)
-
-                drug.initialNumber = drug.number
-                drug.save()
                 
+                # 단일 drugArchive에 대한 ForeignKey 처리
+                DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # 클리닉 수정
 class UpdateClinicView(APIView):
@@ -46,21 +44,9 @@ class UpdateClinicView(APIView):
 
                 if 'drugId' in drug_data and drug_data['drugId'] is not None:
                     drug = DrfDrug.objects.get(drugId=drug_data['drugId'], item=clinic)
-                    drug.drugArchive.clear()
                 else:
-                    drug = DrfDrug.objects.create(item=clinic, **drug_data)
-
-                # drugArchive 처리
-                if 'id' in drug_archive_data and drug_archive_data['id'] is not None:
                     drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
-                    drug.drugArchive.add(drug_archive)
-                else:
-                    drug_archive = DrfDrugArchive.objects.create(
-                        drugName=drug_archive_data['drugName'],
-                        target=drug_archive_data.get('target'),
-                        capacity=drug_archive_data.get('capacity')
-                    )
-                    drug.drugArchive.add(drug_archive)
+                    drug = DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
 
                 drug.number = drug_data.get('number', drug.number)
                 drug.save()
