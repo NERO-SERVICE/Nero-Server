@@ -6,65 +6,59 @@ from django.shortcuts import get_object_or_404
 from .models import DrfClinics, DrfDrug, DrfDrugArchive
 from .serializers import DrfClinicsSerializer, DrfDrugSerializer, DrfDrugArchiveSerializer
 from django.utils import timezone
+from django.db import transaction
 
 # 클리닉 생성
 class CreateClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
-        serializer = DrfClinicsSerializer(data=request.data)
-        if serializer.is_valid():
-            clinic = serializer.save(owner=request.user)
-            
-            for drug_data in request.data.get('drugs', []):
-                drug_archive_id = drug_data.pop('drugArchive')  # 단일 객체로 처리
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-                
-                drug = DrfDrug.objects.create(
-                    item=clinic,
-                    drugArchive=drug_archive,  # drugArchive에 직접 할당
-                    **drug_data
-                )
-                
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        clinic_data = request.data.copy()
+        drugs_data = clinic_data.pop('drugs', [])
+        
+        clinic = DrfClinics.objects.create(owner=request.user, **clinic_data)
+        
+        for drug_data in drugs_data:
+            drug_archive_id = drug_data.pop('drugArchive')
+            drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
+            DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+        
+        serializer = DrfClinicsSerializer(clinic)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 # 클리닉 수정
 class UpdateClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def put(self, request, clinicId):
         clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
+        clinic_data = request.data.copy()
+        drugs_data = clinic_data.pop('drugs', [])
         
-        if serializer.is_valid():
-            clinic = serializer.save()
-
-            for drug_data in request.data.get('drugs', []):
-                drug_archive_id = drug_data.pop('drugArchive')
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-
-                if 'drugId' in drug_data and drug_data['drugId'] is not None:
-                    drug = DrfDrug.objects.get(drugId=drug_data['drugId'], item=clinic)
-                else:
-                    drug = DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
-
-                # drugArchive에 새로운 관계 할당
-                drug.drugArchive = drug_archive
-                drug.number = drug_data.get('number', drug.number)
-                drug.save()
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        # 클리닉 정보 업데이트
+        for attr, value in clinic_data.items():
+            setattr(clinic, attr, value)
+        clinic.save()
+        
+        # 기존 약물 삭제 후 새롭게 추가
+        DrfDrug.objects.filter(item=clinic).delete()
+        
+        for drug_data in drugs_data:
+            drug_archive_id = drug_data.pop('drugArchive')
+            drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
+            DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+        
+        serializer = DrfClinicsSerializer(clinic)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # 특정 클리닉 조회
 class RetrieveClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
         serializer = DrfClinicsSerializer(clinic, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -73,7 +67,7 @@ class DeleteClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)  # 유저가 소유한 클리닉인지 확인
+        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
         clinic.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -114,10 +108,10 @@ class ConsumeSelectedDrugsView(APIView):
             drug = get_object_or_404(DrfDrug, drugId=drug_id, item__owner=request.user)
             
             if drug.number == 0:
-                return Response({'error': f'Drug {drug.drugArchive.first().drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.drugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
 
             if not drug.allow:
-                return Response({'error': f'Drug {drug.drugArchive.first().drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.drugArchive.drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 drug.consume_one()
@@ -125,7 +119,7 @@ class ConsumeSelectedDrugsView(APIView):
                 drug.save()
                 consumed_drugs.append({
                     'drugId': drug.drugId,
-                    'status': drug.drugArchive.first().drugName,
+                    'drugName': drug.drugArchive.drugName,
                     'number': drug.number,
                     'initialNumber': drug.initialNumber,
                     'time': drug.time,
@@ -135,7 +129,7 @@ class ConsumeSelectedDrugsView(APIView):
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
-    
+
 class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
