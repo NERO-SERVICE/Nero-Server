@@ -14,12 +14,13 @@ class DrfDrugAdmin(admin.ModelAdmin):
     list_filter = ['allow', 'time']
 
     def display_drug_archive_name(self, obj):
-        return obj.drugArchive.drugName+" - "+obj.drugArchive.drug.capacity+"mg"
+        return f"{obj.drugArchive.drugName} - {obj.drugArchive.capacity}mg"
     
     def display_target(self, obj):
         return obj.drugArchive.target
     
     display_drug_archive_name.short_description = 'Drug Name'
+    display_target.short_description = 'Target'
 
 @admin.register(DrfDrugArchive)
 class DrfDrugArchiveAdmin(admin.ModelAdmin):
