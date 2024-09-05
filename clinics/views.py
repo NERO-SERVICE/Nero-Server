@@ -7,6 +7,7 @@ from .models import DrfClinics, DrfDrug, DrfDrugArchive
 from .serializers import DrfClinicsSerializer, DrfDrugSerializer, DrfDrugArchiveSerializer
 from django.utils import timezone
 from django.db import transaction
+from pytz import timezone as pytz_timezone
 
 # 클리닉 생성
 class CreateClinicView(APIView):
@@ -22,7 +23,7 @@ class CreateClinicView(APIView):
             for drug_data in request.data.get('drugs', []):
                 drug_archive_id = drug_data.pop('drugArchive')
                 drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-                DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+                DrfDrug.objects.create(clinic=clinic, drugArchive=drug_archive, **drug_data)
             
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -40,12 +41,12 @@ class UpdateClinicView(APIView):
             clinic = serializer.save()
 
             # 기존 약물 삭제 후 새롭게 추가
-            DrfDrug.objects.filter(item=clinic).delete()
+            DrfDrug.objects.filter(clinic=clinic).delete()
 
             for drug_data in request.data.get('drugs', []):
                 drug_archive_id = drug_data.pop('drugArchive')
                 drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-                DrfDrug.objects.create(item=clinic, drugArchive=drug_archive, **drug_data)
+                DrfDrug.objects.create(clinic=clinic, drugArchive=drug_archive, **drug_data)
             
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -73,7 +74,7 @@ class ListClinicsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        clinics = DrfClinics.objects.filter(owner=request.user)
+        clinics = DrfClinics.objects.filter(owner=request.user).prefetch_related('drugs')
         
         if not clinics.exists():
             return Response({'detail': 'No clinics found for this user.'}, status=status.HTTP_404_NOT_FOUND)
@@ -81,6 +82,7 @@ class ListClinicsView(APIView):
         serializer = DrfClinicsSerializer(clinics, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+# 약물 소비
 class ConsumeSelectedDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -90,19 +92,19 @@ class ConsumeSelectedDrugsView(APIView):
             return Response({'error': 'No drug IDs provided.'}, status=status.HTTP_400_BAD_REQUEST)
         
         now = timezone.now()
-        korea_time = now.astimezone(timezone.get_fixed_timezone(540))  # 한국 시간으로 변환 (UTC+9)
+        korea_time = now.astimezone(pytz_timezone('Asia/Seoul'))  # 한국 시간으로 변환
         today_start = korea_time.replace(hour=0, minute=0, second=0, microsecond=0)
         tomorrow_start = today_start + timezone.timedelta(days=1)
         
         if korea_time >= tomorrow_start:
-            drugs_to_reset = DrfDrug.objects.filter(item__owner=request.user, allow=False)
+            drugs_to_reset = DrfDrug.objects.filter(clinic__owner=request.user, allow=False)
             for drug in drugs_to_reset:
                 drug.reset_allow()
         
         consumed_drugs = []
 
         for drug_id in drug_ids:
-            drug = get_object_or_404(DrfDrug, drugId=drug_id, item__owner=request.user)
+            drug = get_object_or_404(DrfDrug, drugId=drug_id, clinic__owner=request.user)
             
             if drug.number == 0:
                 return Response({'error': f'Drug {drug.drugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -127,12 +129,13 @@ class ConsumeSelectedDrugsView(APIView):
 
         return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
 
+# 특정 클리닉에 속한 약물 리스트 조회
 class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, clinicId):
         clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        drugs = DrfDrug.objects.filter(item=clinic)
+        drugs = DrfDrug.objects.filter(clinic=clinic).select_related('drugArchive')
         serializer = DrfDrugSerializer(drugs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
