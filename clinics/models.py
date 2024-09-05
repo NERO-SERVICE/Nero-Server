@@ -43,7 +43,7 @@ class DrfDrug(models.Model):
     allow = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Drugs for {self.item.title}"
+        return f"Drugs for {self.clinic.title}"
     
     def consume_one(self):
         if self.number > 0:
