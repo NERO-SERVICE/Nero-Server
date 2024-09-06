@@ -12,8 +12,9 @@ class YearlyLogView(APIView):
         dose_logs = YearlyDoseLog.objects.filter(owner=user, date__year=year, date__month=month)
         side_effect_logs = YearlySideEffectLog.objects.filter(owner=user, date__year=year, date__month=month)
         
-        # 달의 시작 요일과 끝나는 날짜 계산
         month_start, month_end = calendar.monthrange(year, month)
+
+        adjusted_month_start = (month_start + 1) % 7 # 일요일 : index 0
         
         dose_check = {log.date.day: log.doseAction for log in dose_logs}
         side_effect_check = {log.date.day: log.sideEffectAction for log in side_effect_logs}
@@ -24,21 +25,21 @@ class YearlyLogView(APIView):
                 'date': f'{year}-{month}',
                 'doseCheck': dose_check,
                 'sideEffectCheck': side_effect_check,
-                'monthStart': month_start,
+                'monthStart': adjusted_month_start,
                 'monthEnd': month_end
             }
         elif log_type == 'dose':
             response_data = {
                 'date': f'{year}-{month}',
                 'doseCheck': dose_check,
-                'monthStart': month_start,
+                'monthStart': adjusted_month_start,
                 'monthEnd': month_end
             }
         elif log_type == 'side_effect':
             response_data = {
                 'date': f'{year}-{month}',
                 'sideEffectCheck': side_effect_check,
-                'monthStart': month_start,
+                'monthStart': adjusted_month_start,
                 'monthEnd': month_end
             }
         else:
