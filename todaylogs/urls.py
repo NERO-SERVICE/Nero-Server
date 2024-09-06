@@ -6,6 +6,8 @@ from .views import (
     SurveyResponseCreateView, 
     SideEffectResponseCreateView, 
     SelfRecordListCreateView,
+    SurveyResponseListView,
+    SideEffectResponseListView,
 )
 
 app_name = 'todaylogs'
@@ -17,4 +19,6 @@ urlpatterns = [
     path('survey/', SurveyResponseCreateView.as_view(), name='survey-response-create'),
     path('side_effect/', SideEffectResponseCreateView.as_view(), name='side-effect-response-create'),
     path('self_records/', SelfRecordListCreateView.as_view(), name='self-record-list-create'),
+    path('survey/date/', SurveyResponseListView.as_view(), name='survey-response-list'),
+    path('side_effect/date/', SideEffectResponseListView.as_view(), name='side-effect-response-list'),
 ]

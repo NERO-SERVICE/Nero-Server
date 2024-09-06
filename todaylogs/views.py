@@ -98,3 +98,37 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
             defaults={'next_appointment_date': None}
         )
         serializer.save(today=today)
+
+class SurveyResponseListView(generics.ListAPIView):
+    serializer_class = SurveyResponseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        queryset = SurveyResponse.objects.filter(
+            today__owner=self.request.user,
+            today__created_at__year=year,
+            today__created_at__month=month,
+            today__created_at__day=day
+        )
+        return queryset
+
+class SideEffectResponseListView(generics.ListAPIView):
+    serializer_class = SideEffectResponseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        queryset = SideEffectResponse.objects.filter(
+            today__owner=self.request.user,
+            today__created_at__year=year,
+            today__created_at__month=month,
+            today__created_at__day=day
+        )
+        return queryset

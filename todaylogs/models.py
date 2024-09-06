@@ -35,6 +35,7 @@ class SurveyResponse(models.Model):
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='survey_responses')
     answer = models.CharField(max_length=1, choices=TODAY_SURVEY_ANSWERS, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         formatted_date = self.created_at.strftime('%Y-%m-%d %H:%M')
