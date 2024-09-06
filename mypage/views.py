@@ -1,37 +1,47 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
 from .models import YearlyDoseLog, YearlySideEffectLog
-from .serializers import YearlyDoseLogSerializer, YearlySideEffectLogSerializer
+import calendar
 
-# YearlyDoseLogView: YearlyDoseLog 데이터를 GET/POST 처리하는 APIView
-class YearlyDoseLogView(APIView):
-    permission_classes = [IsAuthenticated]
+class YearlyLogView(APIView):
+    def get(self, request, year, month):
+        user = request.user
+        log_type = request.query_params.get('type', 'all')
+        
+        dose_logs = YearlyDoseLog.objects.filter(owner=user, date__year=year, date__month=month)
+        side_effect_logs = YearlySideEffectLog.objects.filter(owner=user, date__year=year, date__month=month)
+        
+        # 달의 시작 요일과 끝나는 날짜 계산
+        month_start, month_end = calendar.monthrange(year, month)
+        
+        dose_check = {log.date.day: log.doseAction for log in dose_logs}
+        side_effect_check = {log.date.day: log.sideEffectAction for log in side_effect_logs}
+        
+        # type에 따른 데이터 반환
+        if log_type == 'all':
+            response_data = {
+                'date': f'{year}-{month}',
+                'doseCheck': dose_check,
+                'sideEffectCheck': side_effect_check,
+                'monthStart': month_start,
+                'monthEnd': month_end
+            }
+        elif log_type == 'dose':
+            response_data = {
+                'date': f'{year}-{month}',
+                'doseCheck': dose_check,
+                'monthStart': month_start,
+                'monthEnd': month_end
+            }
+        elif log_type == 'side_effect':
+            response_data = {
+                'date': f'{year}-{month}',
+                'sideEffectCheck': side_effect_check,
+                'monthStart': month_start,
+                'monthEnd': month_end
+            }
+        else:
+            return Response({"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request, year):
-        logs = YearlyDoseLog.objects.filter(owner=request.user, date__year=year).order_by('date')
-        serializer = YearlyDoseLogSerializer(logs, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = YearlyDoseLogSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(owner=request.user)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
-
-# YearlySideEffectLogView: YearlySideEffectLog 데이터를 GET/POST 처리하는 APIView
-class YearlySideEffectLogView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, year):
-        logs = YearlySideEffectLog.objects.filter(owner=request.user, date__year=year).order_by('date')
-        serializer = YearlySideEffectLogSerializer(logs, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = YearlySideEffectLogSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(owner=request.user)
-            return Response(serializer.data, status=201)
-        return Response(serializer.errors, status=400)
+        return Response(response_data, status=status.HTTP_200_OK)
