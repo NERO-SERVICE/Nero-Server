@@ -39,7 +39,7 @@ class SurveyResponse(models.Model):
 
     def __str__(self):
         formatted_date = self.created_at.strftime('%Y-%m-%d %H:%M')
-        return f"Today Entry - {self.owner.nickname} - {formatted_date}"
+        return f"Today Entry - {self.today.owner.nickname} - {formatted_date}"
 
 
 class SideEffectResponse(models.Model):
@@ -54,9 +54,11 @@ class SideEffectResponse(models.Model):
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='side_effect_responses')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='side_effect_responses')
     answer = models.CharField(max_length=1, choices=SIDE_EFFECT_ANSWERS, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Side Effect Response - {self.question.question_text} : {self.answer}"
+        formatted_date = self.created_at.strftime('%Y-%m-%d %H:%M')
+        return f"Side Effect Response - {self.question.question_text} : {self.answer} - {formatted_date}"
 
 
 class SelfRecord(models.Model):
