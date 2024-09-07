@@ -14,17 +14,23 @@ class CreateClinicView(APIView):
 
     @transaction.atomic
     def post(self, request):
-        # 요청 데이터 확인 로그 출력
         print("Request Data:", request.data)
 
         serializer = DrfClinicsSerializer(data=request.data)
         if serializer.is_valid():
             clinic = serializer.save(owner=request.user)
             
-            # 약물 데이터를 처리하는 부분
             drugs_data = request.data.get('drugs', [])
             for drug_data in drugs_data:
-                drug_archive_id = drug_data.get('drugArchive')
+                # drugArchive가 딕셔너리일 경우, id를 추출하여 처리
+                drug_archive_data = drug_data.get('drugArchive')
+                
+                # drugArchive가 딕셔너리 형태로 오면, 그 안에서 id를 가져옴
+                if isinstance(drug_archive_data, dict):
+                    drug_archive_id = drug_archive_data.get('id')
+                else:
+                    drug_archive_id = drug_archive_data  # 이미 id인 경우 처리
+                
                 drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
                 
                 DrfDrug.objects.create(
@@ -37,8 +43,7 @@ class CreateClinicView(APIView):
                 )
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        # 유효성 검사 실패 로그 출력
+
         print("Validation Errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
