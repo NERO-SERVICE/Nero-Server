@@ -24,12 +24,12 @@ class DrfDrugAdmin(admin.ModelAdmin):
 
 @admin.register(DrfDrugArchive)
 class DrfDrugArchiveAdmin(admin.ModelAdmin):
-    list_display = ['id', 'drugName', 'target', 'capacity']
+    list_display = ['archiveId', 'drugName', 'target', 'capacity']
     search_fields = ['drugName', 'target', 'capacity']
     list_filter = ['target']
 
 @admin.register(DrfMyDrugArchive)
 class DrfMyDrugArchiveAdmin(admin.ModelAdmin):
-    list_display = ['id', 'owner', 'drugArchive']
+    list_display = ['myArchiveId', 'owner', 'drugArchive']
     search_fields = ['owner__username', 'drugArchive__drugName']
     list_filter = ['drugArchive__target']

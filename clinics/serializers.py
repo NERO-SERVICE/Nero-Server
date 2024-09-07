@@ -4,7 +4,7 @@ from .models import DrfClinics, DrfDrug, DrfDrugArchive, DrfMyDrugArchive
 class DrfDrugArchiveSerializer(serializers.ModelSerializer):
     class Meta:
         model = DrfDrugArchive
-        fields = ['id', 'drugName', 'target', 'capacity']
+        fields = ['archiveId', 'drugName', 'target', 'capacity']
 
 
 class DrfMyDrugArchiveSerializer(serializers.ModelSerializer):
@@ -12,7 +12,7 @@ class DrfMyDrugArchiveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DrfMyDrugArchive
-        fields = ['id', 'drugArchive']
+        fields = ['myArchiveId', 'drugArchive']
 
 
 class DrfDrugSerializer(serializers.ModelSerializer):
@@ -41,7 +41,7 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
             my_drug_archive_data = drug_data.pop('myDrugArchive')
             drug_archive_data = my_drug_archive_data.get('drugArchive')
 
-            drug_archive = DrfDrugArchive.objects.get(id=drug_archive_data['id'])
+            drug_archive = DrfDrugArchive.objects.get(archiveId=drug_archive_data['archiveId'])
             my_drug_archive = DrfMyDrugArchive.objects.create(owner=clinic.owner, drugArchive=drug_archive)
             DrfDrug.objects.create(clinic=clinic, myDrugArchive=my_drug_archive, **drug_data)
         return clinic
@@ -56,7 +56,7 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
                 my_drug_archive_data = drug_data.pop('myDrugArchive')
                 drug_archive_data = my_drug_archive_data.get('drugArchive')
 
-                drug_archive = DrfDrugArchive.objects.get(id=drug_archive_data['id'])
+                drug_archive = DrfDrugArchive.objects.get(archiveId=drug_archive_data['archiveId'])
                 my_drug_archive = DrfMyDrugArchive.objects.create(owner=instance.owner, drugArchive=drug_archive)
                 DrfDrug.objects.create(clinic=instance, myDrugArchive=my_drug_archive, **drug_data)
         return instance

@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 
 class DrfDrugArchive(models.Model):
+    archiveId = models.AutoField(primary_key=True)
     drugName = models.CharField(max_length=100)
     target = models.CharField(max_length=100, null=True, blank=True)
     capacity = models.CharField(max_length=100, null=True, blank=True)
@@ -11,6 +12,7 @@ class DrfDrugArchive(models.Model):
 
 
 class DrfMyDrugArchive(models.Model):
+    myArchiveId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE)
 
@@ -30,10 +32,10 @@ class DrfClinics(models.Model):
     clinicLongitude = models.FloatField(null=True, blank=True)
     locationLabel = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    
+
     def __str__(self):
         return self.title
-    
+
     class Meta:
         ordering = ['-updatedAt']
 
@@ -53,14 +55,14 @@ class DrfDrug(models.Model):
 
     def __str__(self):
         return f"Drugs for {self.clinic.title}"
-    
+
     def consume_one(self):
         if self.number > 0:
             self.number -= 1
             self.save()
         else:
             raise ValueError("No more drugs left to consume.")
-    
+
     def reset_allow(self):
         self.allow = True
         self.save()
