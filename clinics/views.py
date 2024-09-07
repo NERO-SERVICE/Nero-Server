@@ -14,6 +14,9 @@ class CreateClinicView(APIView):
 
     @transaction.atomic
     def post(self, request):
+        # 요청 데이터 확인 로그 출력
+        print("Request Data:", request.data)
+
         serializer = DrfClinicsSerializer(data=request.data)
         if serializer.is_valid():
             clinic = serializer.save(owner=request.user)
@@ -21,11 +24,9 @@ class CreateClinicView(APIView):
             # 약물 데이터를 처리하는 부분
             drugs_data = request.data.get('drugs', [])
             for drug_data in drugs_data:
-                # drugArchive ID만 받기 때문에 이를 사용하여 DrugArchive 객체를 가져옴
                 drug_archive_id = drug_data.get('drugArchive')
                 drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
                 
-                # 약물 생성
                 DrfDrug.objects.create(
                     clinic=clinic, 
                     drugArchive=drug_archive, 
@@ -35,10 +36,10 @@ class CreateClinicView(APIView):
                     allow=drug_data.get('allow')
                 )
 
-            # 정상적으로 생성된 클리닉 데이터를 반환 (drugs도 포함)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        # 유효성 검사를 통과하지 못하면 오류 반환
+        
+        # 유효성 검사 실패 로그 출력
+        print("Validation Errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 클리닉 수정
