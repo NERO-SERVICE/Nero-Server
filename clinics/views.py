@@ -40,62 +40,25 @@ class UpdateClinicView(APIView):
             DrfDrug.objects.filter(clinic=clinic).delete()
 
             for drug_data in request.data.get('drugs', []):
-                drug_archive_id = drug_data.get('drugArchiveId')  # 클라이언트에서 전달된 drugArchiveId 사용
-                drug_archive = get_object_or_404(DrfDrugArchive, archiveId=drug_archive_id)
-
-                # DrfMyDrugArchive 생성 또는 조회
+                # DrfMyDrugArchive를 생성하거나 수정
                 my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
-                    owner=clinic.owner, 
-                    drugArchive=drug_archive
+                    owner=clinic.owner,
+                    archiveId=drug_data['myDrugArchive']['archiveId'],
+                    defaults={
+                        'drugName': drug_data['myDrugArchive']['drugName'],
+                        'target': drug_data['myDrugArchive']['target'],
+                        'capacity': drug_data['myDrugArchive']['capacity'],
+                    }
                 )
-
+                
                 # DrfDrug 생성
                 DrfDrug.objects.create(
-                    clinic=clinic, 
-                    myDrugArchive=my_drug_archive, 
-                    number=drug_data.get('number'), 
-                    initialNumber=drug_data.get('initialNumber'), 
-                    time=drug_data.get('time'), 
-                    allow=drug_data.get('allow')
-                )
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# 클리닉 수정
-class UpdateClinicView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @transaction.atomic
-    def put(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
-
-        if serializer.is_valid():
-            clinic = serializer.save()
-
-            # 기존 약물 삭제 후 새롭게 추가
-            DrfDrug.objects.filter(clinic=clinic).delete()
-
-            for drug_data in request.data.get('drugs', []):
-                drug_archive_id = drug_data.get('drugArchiveId')
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-
-                # DrfMyDrugArchive 생성 또는 조회
-                my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
-                    owner=clinic.owner, 
-                    drugArchive=drug_archive
-                )
-
-                # DrfDrug 생성
-                DrfDrug.objects.create(
-                    clinic=clinic, 
-                    myDrugArchive=my_drug_archive, 
-                    number=drug_data.get('number'), 
-                    initialNumber=drug_data.get('initialNumber'), 
-                    time=drug_data.get('time'), 
-                    allow=drug_data.get('allow')
+                    clinic=clinic,
+                    myDrugArchive=my_drug_archive,
+                    number=drug_data['number'],
+                    initialNumber=drug_data['initialNumber'],
+                    time=drug_data['time'],
+                    allow=drug_data['allow']
                 )
 
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -136,7 +99,6 @@ class ListClinicsView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 약물 소비
 class ConsumeSelectedDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -161,10 +123,10 @@ class ConsumeSelectedDrugsView(APIView):
             drug = get_object_or_404(DrfDrug, drugId=drug_id, clinic__owner=request.user)
             
             if drug.number == 0:
-                return Response({'error': f'Drug {drug.myDrugArchive.drugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.myDrugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
 
             if not drug.allow:
-                return Response({'error': f'Drug {drug.myDrugArchive.drugArchive.drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.myDrugArchive.drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
                 drug.consume_one()
@@ -172,7 +134,7 @@ class ConsumeSelectedDrugsView(APIView):
                 drug.save()
                 consumed_drugs.append({
                     'drugId': drug.drugId,
-                    'drugName': drug.myDrugArchive.drugArchive.drugName,
+                    'drugName': drug.myDrugArchive.drugName,
                     'number': drug.number,
                     'initialNumber': drug.initialNumber,
                     'time': drug.time,
@@ -184,16 +146,14 @@ class ConsumeSelectedDrugsView(APIView):
         return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
 
 
-# 특정 클리닉에 속한 약물 리스트 조회
 class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, clinicId):
         clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        drugs = DrfDrug.objects.filter(clinic=clinic).select_related('myDrugArchive__drugArchive')
+        drugs = DrfDrug.objects.filter(clinic=clinic).select_related('myDrugArchive')
         serializer = DrfDrugSerializer(drugs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 # DrfDrugArchive 리스트 조회
 class ListDrugArchivesView(APIView):
