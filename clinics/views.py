@@ -9,7 +9,6 @@ from django.utils import timezone
 from django.db import transaction
 from pytz import timezone as pytz_timezone
 
-# 클리닉 생성
 class CreateClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -20,12 +19,26 @@ class CreateClinicView(APIView):
             clinic = serializer.save(owner=request.user)
             
             # 약물 데이터를 처리하는 부분
-            for drug_data in request.data.get('drugs', []):
-                drug_archive_id = drug_data.pop('drugArchive')
+            drugs_data = request.data.get('drugs', [])
+            for drug_data in drugs_data:
+                # drugArchive ID만 받기 때문에 이를 사용하여 DrugArchive 객체를 가져옴
+                drug_archive_id = drug_data.get('drugArchive')
                 drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-                DrfDrug.objects.create(clinic=clinic, drugArchive=drug_archive, **drug_data)
-            
+                
+                # 약물 생성
+                DrfDrug.objects.create(
+                    clinic=clinic, 
+                    drugArchive=drug_archive, 
+                    number=drug_data.get('number'), 
+                    initialNumber=drug_data.get('initialNumber'), 
+                    time=drug_data.get('time'), 
+                    allow=drug_data.get('allow')
+                )
+
+            # 정상적으로 생성된 클리닉 데이터를 반환 (drugs도 포함)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # 유효성 검사를 통과하지 못하면 오류 반환
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 클리닉 수정
