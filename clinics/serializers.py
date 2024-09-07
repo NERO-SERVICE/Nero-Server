@@ -8,11 +8,9 @@ class DrfDrugArchiveSerializer(serializers.ModelSerializer):
 
 
 class DrfMyDrugArchiveSerializer(serializers.ModelSerializer):
-    drugArchive = DrfDrugArchiveSerializer()
-
     class Meta:
         model = DrfMyDrugArchive
-        fields = ['myArchiveId', 'drugArchive']
+        fields = ['myArchiveId', 'archiveId', 'drugName', 'target', 'capacity']
 
 
 class DrfDrugSerializer(serializers.ModelSerializer):
@@ -37,24 +35,20 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         drugs_data = validated_data.pop('drugs')
         clinic = DrfClinics.objects.create(**validated_data)
-        
+
         for drug_data in drugs_data:
             my_drug_archive_data = drug_data.pop('myDrugArchive')
-            drug_archive_data = my_drug_archive_data.pop('drugArchive')
 
-            # DrugArchive 및 MyDrugArchive 객체 가져오기 또는 생성
-            drug_archive, created = DrfDrugArchive.objects.get_or_create(
-                archiveId=drug_archive_data['archiveId'], 
-                defaults=drug_archive_data
-            )
-            
-            my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
+            # DrfMyDrugArchive 객체 생성
+            my_drug_archive = DrfMyDrugArchive.objects.create(
                 owner=clinic.owner,
-                drugArchive=drug_archive,
-                defaults={'myArchiveId': my_drug_archive_data['myArchiveId']}
+                archiveId=my_drug_archive_data['archiveId'],
+                drugName=my_drug_archive_data['drugName'],
+                target=my_drug_archive_data['target'],
+                capacity=my_drug_archive_data['capacity']
             )
-            
-            # Drug 객체 생성
+
+            # DrfDrug 객체 생성
             DrfDrug.objects.create(
                 clinic=clinic,
                 myDrugArchive=my_drug_archive,
@@ -63,6 +57,5 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
                 time=drug_data['time'],
                 allow=drug_data['allow']
             )
-        
-        return clinic
 
+        return clinic

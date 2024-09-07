@@ -10,14 +10,14 @@ class DrfClinicsAdmin(admin.ModelAdmin):
 @admin.register(DrfDrug)
 class DrfDrugAdmin(admin.ModelAdmin):
     list_display = ['drugId', 'clinic', 'display_my_drug_archive_name', 'display_target', 'number', 'time', 'allow']
-    search_fields = ['myDrugArchive__drugArchive__drugName', 'clinic__title']
+    search_fields = ['myDrugArchive__drugName', 'clinic__title']
     list_filter = ['allow', 'time']
-
+    
     def display_my_drug_archive_name(self, obj):
-        return f"{obj.myDrugArchive.drugArchive.drugName} - {obj.myDrugArchive.drugArchive.capacity}mg"
+        return f"{obj.myDrugArchive.drugName} - {obj.myDrugArchive.capacity}mg"
     
     def display_target(self, obj):
-        return obj.myDrugArchive.drugArchive.target
+        return obj.myDrugArchive.target
     
     display_my_drug_archive_name.short_description = 'Drug Name'
     display_target.short_description = 'Target'
@@ -30,6 +30,6 @@ class DrfDrugArchiveAdmin(admin.ModelAdmin):
 
 @admin.register(DrfMyDrugArchive)
 class DrfMyDrugArchiveAdmin(admin.ModelAdmin):
-    list_display = ['myArchiveId', 'owner', 'drugArchive']
-    search_fields = ['owner__username', 'drugArchive__drugName']
-    list_filter = ['drugArchive__target']
+    list_display = ['myArchiveId', 'owner', 'archiveId', 'drugName', 'target', 'capacity']
+    search_fields = ['owner__username', 'drugName']
+    list_filter = ['target']

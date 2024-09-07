@@ -14,10 +14,13 @@ class DrfDrugArchive(models.Model):
 class DrfMyDrugArchive(models.Model):
     myArchiveId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE)
+    archiveId = models.IntegerField()
+    drugName = models.CharField(max_length=100)
+    target = models.CharField(max_length=100, null=True, blank=True)
+    capacity = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.owner}'s selected {self.drugArchive.drugName}"
+        return f"{self.owner}'s selected {self.drugName}"
 
 
 class DrfClinics(models.Model):
