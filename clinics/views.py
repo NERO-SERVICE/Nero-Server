@@ -19,29 +19,6 @@ class CreateClinicView(APIView):
 
         if serializer.is_valid():
             clinic = serializer.save(owner=request.user)
-
-            # 약물 데이터를 처리하는 부분
-            drugs_data = request.data.get('drugs', [])
-            for drug_data in drugs_data:
-                drug_archive_id = drug_data.get('drugArchiveId')
-                drug_archive = get_object_or_404(DrfDrugArchive, archiveId=drug_archive_id)
-
-                # DrfMyDrugArchive 생성 또는 조회
-                my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
-                    owner=clinic.owner, 
-                    drugArchive=drug_archive
-                )
-
-                # DrfDrug 생성
-                DrfDrug.objects.create(
-                    clinic=clinic, 
-                    myDrugArchive=my_drug_archive, 
-                    number=drug_data.get('number'), 
-                    initialNumber=drug_data.get('initialNumber'), 
-                    time=drug_data.get('time'), 
-                    allow=drug_data.get('allow')
-                )
-
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         print("Validation Errors:", serializer.errors)
