@@ -37,26 +37,32 @@ class DrfClinicsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         drugs_data = validated_data.pop('drugs')
         clinic = DrfClinics.objects.create(**validated_data)
+        
         for drug_data in drugs_data:
             my_drug_archive_data = drug_data.pop('myDrugArchive')
-            drug_archive_data = my_drug_archive_data.get('drugArchive')
+            drug_archive_data = my_drug_archive_data.pop('drugArchive')
 
-            drug_archive = DrfDrugArchive.objects.get(archiveId=drug_archive_data['archiveId'])
-            my_drug_archive = DrfMyDrugArchive.objects.create(owner=clinic.owner, drugArchive=drug_archive)
-            DrfDrug.objects.create(clinic=clinic, myDrugArchive=my_drug_archive, **drug_data)
+            # DrugArchive 및 MyDrugArchive 객체 가져오기 또는 생성
+            drug_archive, created = DrfDrugArchive.objects.get_or_create(
+                archiveId=drug_archive_data['archiveId'], 
+                defaults=drug_archive_data
+            )
+            
+            my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
+                owner=clinic.owner,
+                drugArchive=drug_archive,
+                defaults={'myArchiveId': my_drug_archive_data['myArchiveId']}
+            )
+            
+            # Drug 객체 생성
+            DrfDrug.objects.create(
+                clinic=clinic,
+                myDrugArchive=my_drug_archive,
+                number=drug_data['number'],
+                initialNumber=drug_data['initialNumber'],
+                time=drug_data['time'],
+                allow=drug_data['allow']
+            )
+        
         return clinic
 
-    def update(self, instance, validated_data):
-        drugs_data = validated_data.pop('drugs', None)
-        instance = super().update(instance, validated_data)
-
-        if drugs_data:
-            instance.drugs.all().delete()
-            for drug_data in drugs_data:
-                my_drug_archive_data = drug_data.pop('myDrugArchive')
-                drug_archive_data = my_drug_archive_data.get('drugArchive')
-
-                drug_archive = DrfDrugArchive.objects.get(archiveId=drug_archive_data['archiveId'])
-                my_drug_archive = DrfMyDrugArchive.objects.create(owner=instance.owner, drugArchive=drug_archive)
-                DrfDrug.objects.create(clinic=instance, myDrugArchive=my_drug_archive, **drug_data)
-        return instance
