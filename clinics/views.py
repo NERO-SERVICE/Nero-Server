@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import DrfClinics, DrfDrug, DrfDrugArchive
+from .models import DrfClinics, DrfDrug, DrfDrugArchive, DrfMyDrugArchive
 from .serializers import DrfClinicsSerializer, DrfDrugSerializer, DrfDrugArchiveSerializer
 from django.utils import timezone
 from django.db import transaction
@@ -15,27 +15,22 @@ class CreateClinicView(APIView):
     @transaction.atomic
     def post(self, request):
         print("Request Data:", request.data)
-
         serializer = DrfClinicsSerializer(data=request.data)
+
         if serializer.is_valid():
             clinic = serializer.save(owner=request.user)
-            
+
+            # 약물 데이터를 처리하는 부분
             drugs_data = request.data.get('drugs', [])
             for drug_data in drugs_data:
-                # drugArchive가 딕셔너리일 경우, id를 추출하여 처리
-                drug_archive_data = drug_data.get('drugArchive')
-                
-                # drugArchive가 딕셔너리 형태로 오면, 그 안에서 id를 가져옴
-                if isinstance(drug_archive_data, dict):
-                    drug_archive_id = drug_archive_data.get('id')
-                else:
-                    drug_archive_id = drug_archive_data  # 이미 id인 경우 처리
-                
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-                
+                my_drug_archive_data = drug_data.get('myDrugArchive')
+                drug_archive_data = my_drug_archive_data.get('drugArchive')
+
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
+                my_drug_archive = DrfMyDrugArchive.objects.create(owner=clinic.owner, drugArchive=drug_archive)
                 DrfDrug.objects.create(
                     clinic=clinic, 
-                    drugArchive=drug_archive, 
+                    myDrugArchive=my_drug_archive, 
                     number=drug_data.get('number'), 
                     initialNumber=drug_data.get('initialNumber'), 
                     time=drug_data.get('time'), 
@@ -46,6 +41,7 @@ class CreateClinicView(APIView):
 
         print("Validation Errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # 클리닉 수정
 class UpdateClinicView(APIView):
@@ -63,11 +59,15 @@ class UpdateClinicView(APIView):
             DrfDrug.objects.filter(clinic=clinic).delete()
 
             for drug_data in request.data.get('drugs', []):
-                drug_archive_id = drug_data.pop('drugArchive')
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
-                DrfDrug.objects.create(clinic=clinic, drugArchive=drug_archive, **drug_data)
+                my_drug_archive_data = drug_data.get('myDrugArchive')
+                drug_archive_data = my_drug_archive_data.get('drugArchive')
+
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
+                my_drug_archive = DrfMyDrugArchive.objects.create(owner=clinic.owner, drugArchive=drug_archive)
+                DrfDrug.objects.create(clinic=clinic, myDrugArchive=my_drug_archive, **drug_data)
             
             return Response(serializer.data, status=status.HTTP_200_OK)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # 특정 클리닉 조회
