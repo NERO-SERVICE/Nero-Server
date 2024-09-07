@@ -8,6 +8,7 @@ from .views import (
     SelfRecordListCreateView,
     SurveyResponseListView,
     SideEffectResponseListView,
+    SelfRecordResponseListView,
 )
 
 app_name = 'todaylogs'
@@ -21,4 +22,5 @@ urlpatterns = [
     path('self_records/', SelfRecordListCreateView.as_view(), name='self-record-list-create'),
     path('survey/date/', SurveyResponseListView.as_view(), name='survey-response-list'),
     path('side_effect/date/', SideEffectResponseListView.as_view(), name='side-effect-response-list'),
+    path('self_record/date/', SelfRecordResponseListView.as_view(), name='self-record-response-list'),
 ]

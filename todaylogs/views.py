@@ -132,3 +132,19 @@ class SideEffectResponseListView(generics.ListAPIView):
             today__created_at__day=day
         )
         return queryset
+    
+class SelfRecordResponseListView(generics.ListAPIView):
+    serializer_class = SelfRecordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        return SelfRecord.objects.filter(
+            today__owner=self.request.user,
+            created_at__year=year,
+            created_at__month=month,
+            created_at__day=day
+        )
