@@ -9,6 +9,15 @@ class DrfDrugArchive(models.Model):
     def __str__(self):
         return self.drugName
 
+
+class DrfMyDrugArchive(models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.owner}'s selected {self.drugArchive.drugName}"
+
+
 class DrfClinics(models.Model):
     clinicId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -21,7 +30,6 @@ class DrfClinics(models.Model):
     clinicLongitude = models.FloatField(null=True, blank=True)
     locationLabel = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    drugArchives = models.ManyToManyField(DrfDrugArchive, related_name='clinics')
     
     def __str__(self):
         return self.title
@@ -29,10 +37,11 @@ class DrfClinics(models.Model):
     class Meta:
         ordering = ['-updatedAt']
 
+
 class DrfDrug(models.Model):
     drugId = models.AutoField(primary_key=True)
     clinic = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
-    drugArchive = models.ForeignKey(DrfDrugArchive, on_delete=models.CASCADE)
+    myDrugArchive = models.ForeignKey(DrfMyDrugArchive, on_delete=models.CASCADE)
     number = models.IntegerField(default=0)
     initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
