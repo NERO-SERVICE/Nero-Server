@@ -23,11 +23,16 @@ class CreateClinicView(APIView):
             # 약물 데이터를 처리하는 부분
             drugs_data = request.data.get('drugs', [])
             for drug_data in drugs_data:
-                my_drug_archive_data = drug_data.get('myDrugArchive')
-                drug_archive_data = my_drug_archive_data.get('drugArchive')
+                drug_archive_id = drug_data.get('drugArchiveId')  # 클라이언트에서 전달된 drugArchiveId 사용
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
 
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
-                my_drug_archive = DrfMyDrugArchive.objects.create(owner=clinic.owner, drugArchive=drug_archive)
+                # DrfMyDrugArchive 생성 또는 조회
+                my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
+                    owner=clinic.owner, 
+                    drugArchive=drug_archive
+                )
+
+                # DrfDrug 생성
                 DrfDrug.objects.create(
                     clinic=clinic, 
                     myDrugArchive=my_drug_archive, 
@@ -40,6 +45,8 @@ class CreateClinicView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         print("Validation Errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -59,13 +66,25 @@ class UpdateClinicView(APIView):
             DrfDrug.objects.filter(clinic=clinic).delete()
 
             for drug_data in request.data.get('drugs', []):
-                my_drug_archive_data = drug_data.get('myDrugArchive')
-                drug_archive_data = my_drug_archive_data.get('drugArchive')
+                drug_archive_id = drug_data.get('drugArchiveId')  # 클라이언트에서 전달된 drugArchiveId 사용
+                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_id)
 
-                drug_archive = get_object_or_404(DrfDrugArchive, id=drug_archive_data['id'])
-                my_drug_archive = DrfMyDrugArchive.objects.create(owner=clinic.owner, drugArchive=drug_archive)
-                DrfDrug.objects.create(clinic=clinic, myDrugArchive=my_drug_archive, **drug_data)
-            
+                # DrfMyDrugArchive 생성 또는 조회
+                my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
+                    owner=clinic.owner, 
+                    drugArchive=drug_archive
+                )
+
+                # DrfDrug 생성
+                DrfDrug.objects.create(
+                    clinic=clinic, 
+                    myDrugArchive=my_drug_archive, 
+                    number=drug_data.get('number'), 
+                    initialNumber=drug_data.get('initialNumber'), 
+                    time=drug_data.get('time'), 
+                    allow=drug_data.get('allow')
+                )
+
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
