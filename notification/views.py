@@ -50,7 +50,7 @@ class RetrieveNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
-        notice = get_object_or_404(Notification, noticetId=id)
+        notice = get_object_or_404(Notification, noticeId=id)
         serializer = NotificationSerializer(notice, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
