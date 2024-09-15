@@ -127,47 +127,35 @@ def update_user_info(request, userId):
 
 
 class MemoriesView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated] 
 
-    def get(self, request, userId):
-        user = get_object_or_404(User, id=userId)
-        if user != request.user:
-            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
-
-        memories = Memories.objects.filter(userId=user)
+    def get(self, request):
+        # 현재 로그인한 유저로 Memories 가져오기
+        memories = Memories.objects.filter(userId=request.user)
         serializer = MemoriesSerializer(memories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request, userId):
-        user = get_object_or_404(User, id=userId)
-        if user != request.user:
-            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
-
+    def post(self, request):
+        # 현재 로그인한 유저를 이용해 Memories 생성
         serializer = MemoriesSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(userId=user)
+            serializer.save(userId=request.user)  # userId는 로그인된 유저로 저장
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request, userId):
-        user = get_object_or_404(User, id=userId)
-        if user != request.user:
-            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
-
+    def patch(self, request):
+        # 현재 로그인한 유저의 특정 memory 수정
         memoryId = request.data.get('memoryId')
-        memory = get_object_or_404(Memories, memoryId=memoryId, userId=user)
+        memory = get_object_or_404(Memories, memoryId=memoryId, userId=request.user)
         serializer = MemoriesSerializer(memory, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, userId):
-        user = get_object_or_404(User, id=userId)
-        if user != request.user:
-            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
-
+    def delete(self, request):
+        # 현재 로그인한 유저의 특정 memory 삭제
         memoryId = request.data.get('memoryId')
-        memory = get_object_or_404(Memories, memoryId=memoryId, userId=user)
+        memory = get_object_or_404(Memories, memoryId=memoryId, userId=request.user)
         memory.delete()
         return Response({"detail": "Memory deleted"}, status=status.HTTP_204_NO_CONTENT)
