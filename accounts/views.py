@@ -97,27 +97,22 @@ def update_user_info(request, userId):
         # 클라이언트로부터 데이터 받기
         nickname = request.data.get('nickName')
         email = request.data.get('email')
-        birth = request.data.get('birth')  # 클라이언트로부터 받은 생년월일 형식 '900101'
+        birth = request.data.get('birth')  # 클라이언트로부터 받은 생년월일 형식 '1999-03-20'
         sex = request.data.get('sex')
 
-        # 닉네임, 이메일, 생일, 성별 정보 업데이트 (null 상태인 필드만)
+        # 닉네임, 이메일, 생일, 성별 정보 업데이트
         if nickname:
             user.nickname = nickname
         if email:
             user.email = email
 
-        # 생년월일 처리: '900101' 형식을 '1990-01-01'로 변환
+        # 생년월일 처리: 'YYYY-MM-DD' 형식으로 바로 변환
         if birth:
             try:
-                # birth 문자열이 6자리인 경우 처리
-                if len(birth) == 6:
-                    year_prefix = '19' if int(birth[:2]) <= 21 else '20'  # 2000년 이후 출생자는 '20'으로 시작
-                    formatted_birth = f'{year_prefix}{birth[:2]}-{birth[2:4]}-{birth[4:6]}'
-                    user.birth = datetime.strptime(formatted_birth, '%Y-%m-%d').date()
-                else:
-                    return JsonResponse({'error': 'Invalid birth format. Use YYMMDD'}, status=400, json_dumps_params={'ensure_ascii': False})
+                # 클라이언트에서 'YYYY-MM-DD' 형식으로 받은 생년월일 처리
+                user.birth = datetime.strptime(birth, '%Y-%m-%d').date()
             except ValueError:
-                return JsonResponse({'error': 'Invalid date format'}, status=400, json_dumps_params={'ensure_ascii': False})
+                return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400, json_dumps_params={'ensure_ascii': False})
 
         if sex:
             user.sex = sex
