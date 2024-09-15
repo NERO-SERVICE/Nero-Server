@@ -94,28 +94,22 @@ def update_user_info(request, userId):
         # 클라이언트로부터 데이터 받기
         nickname = request.data.get('nickName')
         email = request.data.get('email')
-        birth = request.data.get('birth')  # 클라이언트로부터 받은 생년월일 형식 YYMMDD (ex. 990320)
+        birth = request.data.get('birth')
         sex = request.data.get('sex')
 
-        # 닉네임, 이메일, 생일, 성별 정보 업데이트
+        # 닉네임, 이메일, 성별 정보 업데이트
         if nickname:
             user.nickname = nickname
         if email:
             user.email = email
 
-        # 생년월일 처리: YYMMDD 형식을 YYYY-MM-DD로 변환
+        # 생년월일 처리: ISO 8601 형식의 DateTime을 Date로 변환하여 저장
         if birth:
             try:
-                birth = str(birth)  # birth를 문자열로 변환
-                if len(birth) == 6:  # 형식 확인
-                    # YY가 00~21 사이는 2000년대, 그 외는 1900년대로 가정
-                    year_prefix = '19' if int(birth[:2]) > 21 else '20'
-                    formatted_birth = f'{year_prefix}{birth[:2]}-{birth[2:4]}-{birth[4:6]}'
-                    user.birth = datetime.strptime(formatted_birth, '%Y-%m-%d').date()
-                else:
-                    return JsonResponse({'error': 'Invalid birth format. Use YYMMDD'}, status=400, json_dumps_params={'ensure_ascii': False})
+                # '1999-03-20T00:00:00.000' 형식의 문자열을 Date로 변환
+                user.birth = datetime.fromisoformat(birth).date()  # ISO 형식의 DateTime을 받아 Date 객체로 변환
             except ValueError:
-                return JsonResponse({'error': 'Invalid date format'}, status=400, json_dumps_params={'ensure_ascii': False})
+                return JsonResponse({'error': 'Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sss)'}, status=400, json_dumps_params={'ensure_ascii': False})
 
         if sex:
             user.sex = sex
