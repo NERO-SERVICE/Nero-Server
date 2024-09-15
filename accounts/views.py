@@ -90,10 +90,6 @@ def update_user_info(request, userId):
     try:
         user = request.user
 
-        # URL로부터 전달된 userId와 현재 로그인된 유저의 ID가 일치하는지 확인
-        if user.id != userId:
-            return JsonResponse({'error': 'You are not authorized to update this user'}, status=403, json_dumps_params={'ensure_ascii': False})
-
         # 클라이언트로부터 데이터 받기
         nickname = request.data.get('nickName')
         email = request.data.get('email')
