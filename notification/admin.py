@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import DrfProduct, ImageFile
+from .models import Notification, ImageFile
 
 class ImageFileInline(admin.TabularInline):
     model = ImageFile
@@ -8,9 +8,9 @@ class ImageFileInline(admin.TabularInline):
     readonly_fields = ['uploaded_at']
 
 
-class DrfProductAdmin(admin.ModelAdmin):
+class NotificationAdmin(admin.ModelAdmin):
     inlines = [ImageFileInline]
-    list_display = ('productId', 'title', 'writer', 'createdAt', 'updatedAt')
+    list_display = ('noticeId', 'title', 'writer', 'createdAt', 'updatedAt')
     search_fields = ('title', 'description', 'writer__nickname') 
     readonly_fields = ('createdAt', 'updatedAt')
 
@@ -27,5 +27,5 @@ class DrfProductAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(DrfProduct, DrfProductAdmin)
+admin.site.register(Notification, NotificationAdmin)
 admin.site.register(ImageFile)

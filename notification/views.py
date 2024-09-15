@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from .models import DrfProduct
-from .serializers import DrfProductSerializer
+from .models import Notification
+from .serializers import NotificationSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 
-class CreateProductView(APIView):
+class CreateNoticeView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
@@ -20,7 +20,7 @@ class CreateProductView(APIView):
         if not request.user.is_product_writer:
             return Response({"detail": "You do not have permission to create a product."}, status=status.HTTP_403_FORBIDDEN)
         
-        serializer = DrfProductSerializer(data=request.data, context={'request': request})
+        serializer = NotificationSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save(writer=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -28,7 +28,7 @@ class CreateProductView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UpdateProductView(APIView):
+class UpdateNoticeView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
@@ -37,8 +37,8 @@ class UpdateProductView(APIView):
         if not request.user.is_product_writer:
             return Response({"detail": "You do not have permission to update a product."}, status=status.HTTP_403_FORBIDDEN)
 
-        product = get_object_or_404(DrfProduct, productId=id, writer=request.user)
-        serializer = DrfProductSerializer(product, data=request.data, partial=True)
+        notice = get_object_or_404(Notification, noticeId=id, writer=request.user)
+        serializer = NotificationSerializer(notice, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -46,17 +46,17 @@ class UpdateProductView(APIView):
 
 
 # 특정 제품 조회
-class RetrieveProductView(APIView):
+class RetrieveNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
-        product = get_object_or_404(DrfProduct, productId=id)  # writer 조건 제거
-        serializer = DrfProductSerializer(product, context={'request': request})
+        notice = get_object_or_404(Notification, noticetId=id)
+        serializer = NotificationSerializer(notice, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 제품 삭제
-class DeleteProductView(APIView):
+class DeleteNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, id):
@@ -64,21 +64,21 @@ class DeleteProductView(APIView):
         if not request.user.is_product_writer:
             return Response({"detail": "You do not have permission to delete a product."}, status=status.HTTP_403_FORBIDDEN)
 
-        product = get_object_or_404(DrfProduct, productId=id, writer=request.user)
-        product.delete()
+        notice = get_object_or_404(Notification, noticeId=id, writer=request.user)
+        notice.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # 사용자가 소유한 모든 제품 리스트 조회
-class ListProductsView(APIView):
+class ListNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         # 모든 사용자의 제품을 조회
-        products = DrfProduct.objects.all()
+        noticeList = Notification.objects.all()
 
-        if not products.exists():
+        if not noticeList.exists():
             return Response({'detail': 'No products found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = DrfProductSerializer(products, many=True, context={'request': request})
+        serializer = NotificationSerializer(noticeList, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
