@@ -60,12 +60,12 @@ INSTALLED_APPS = [
     # project app
     'main',
     'accounts',
-    'products',
     'clinics',
     'todaylogs',
     'fastlogs',
     'news',
     'mypage',
+    'notification',
 ]
 
 SITE_ID = 1

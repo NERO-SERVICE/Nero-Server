@@ -1,23 +1,20 @@
 from rest_framework import serializers
-from .models import DrfProduct, ImageFile
-import logging
-
-logger = logging.getLogger('django')
+from .models import Notification, ImageFile
 
 class ImageFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageFile
         fields = ['file']
 
-class DrfProductSerializer(serializers.ModelSerializer):
+class NotificationSerializer(serializers.ModelSerializer):
     imageUrls = serializers.SerializerMethodField()
     nickname = serializers.SerializerMethodField()
     imageFiles = ImageFileSerializer(many=True, write_only=True, required=False)
 
     class Meta:
-        model = DrfProduct
+        model = Notification
         fields = [
-            'productId',
+            'noticeId',
             'title',
             'description',
             'imageUrls',
@@ -37,24 +34,22 @@ class DrfProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         image_files_data = self.initial_data.getlist('imageFiles')
-        logger.debug("Received image files: %s", image_files_data)
         
-        product = DrfProduct.objects.create(**validated_data)
+        notice = Notification.objects.create(**validated_data)
         
         for image_data in image_files_data:
-            logger.debug("Saving image file: %s", image_data)
-            ImageFile.objects.create(product=product, file=image_data)
+            ImageFile.objects.create(notice=notice, file=image_data)
 
-        return product
+        return notice
 
     def update(self, instance, validated_data):
         image_files_data = validated_data.pop('imageFiles', None)
         
-        product = super().update(instance, validated_data)
+        notice = super().update(instance, validated_data)
 
         if image_files_data is not None:
             instance.imageFiles.all().delete() 
             for image_data in image_files_data:
-                ImageFile.objects.create(product=product, **image_data)
+                ImageFile.objects.create(notice=notice, **image_data)
 
-        return product
+        return notice
