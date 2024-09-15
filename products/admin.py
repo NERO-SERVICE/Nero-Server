@@ -10,7 +10,7 @@ class ImageFileInline(admin.TabularInline):
 
 class DrfProductAdmin(admin.ModelAdmin):
     inlines = [ImageFileInline]
-    list_display = ('id', 'title', 'writer', 'createdAt', 'updatedAt')
+    list_display = ('productId', 'title', 'writer', 'createdAt', 'updatedAt')
     search_fields = ('title', 'description', 'writer__nickname') 
     readonly_fields = ('createdAt', 'updatedAt')
 
