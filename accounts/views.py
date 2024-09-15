@@ -127,7 +127,7 @@ def update_user_info(request, userId):
 
 
 class MemoriesView(APIView):
-    permission_classes = [IsAuthenticated] 
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         # 현재 로그인한 유저로 Memories 가져오기
@@ -136,12 +136,23 @@ class MemoriesView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        # 현재 로그인한 유저를 이용해 Memories 생성
-        serializer = MemoriesSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(userId=request.user)  # userId는 로그인된 유저로 저장
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 현재 로그인한 유저의 memories가 이미 존재하는지 확인
+        memories = Memories.objects.filter(userId=request.user).first()
+
+        if memories:
+            # 이미 존재하면 업데이트 (PATCH와 유사한 처리)
+            serializer = MemoriesSerializer(memories, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # 존재하지 않으면 새로 생성
+            serializer = MemoriesSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(userId=request.user)  # userId는 로그인된 유저로 저장
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request):
         # 현재 로그인한 유저의 특정 memory 수정
