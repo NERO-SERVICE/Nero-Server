@@ -10,23 +10,19 @@ class ImageFileInline(admin.TabularInline):
 
 class DrfProductAdmin(admin.ModelAdmin):
     inlines = [ImageFileInline]
-    list_display = ('id', 'title', 'owner', 'productPrice', 'status', 'categoryType', 'createdAt', 'updatedAt', 'viewCount')
-    search_fields = ('title', 'description', 'owner__username', 'status', 'categoryType')
-    list_filter = ('status', 'isFree', 'categoryType', 'createdAt', 'updatedAt')
-    readonly_fields = ('createdAt', 'updatedAt', 'viewCount')
+    list_display = ('id', 'title', 'writer', 'createdAt', 'updatedAt')
+    search_fields = ('title', 'description', 'writer__nickname') 
+    readonly_fields = ('createdAt', 'updatedAt')
 
     fieldsets = (
         ('Basic Information', {
-            'fields': ('title', 'description', 'productPrice', 'isFree', 'status', 'categoryType')
+            'fields': ('title', 'description')
         }),
-        ('Owner Information', {
-            'fields': ('owner',)
-        }),
-        ('Location Information', {
-            'fields': ('wantTradeLocation', 'wantTradeLocationLabel')
+        ('Writer Information', {
+            'fields': ('writer',)
         }),
         ('Additional Information', {
-            'fields': ('viewCount', 'likers', 'createdAt', 'updatedAt')
+            'fields': ('createdAt', 'updatedAt')
         }),
     )
 
