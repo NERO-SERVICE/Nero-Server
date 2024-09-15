@@ -8,5 +8,10 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Memories)
 class MemoriesAdmin(admin.ModelAdmin):
-    list_display = ['memoryId', 'userId__nickname', 'items']
+    list_display = ['memoryId', 'get_user_nickname', 'items']
     search_fields = ['userId__nickname', 'items']
+
+    def get_user_nickname(self, obj):
+        return obj.userId.nickname
+    
+    get_user_nickname.short_description = 'User Nickname'
