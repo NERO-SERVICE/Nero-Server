@@ -8,5 +8,5 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Memories)
 class MemoriesAdmin(admin.ModelAdmin):
-    list_display = ['memoryId', 'userId', 'items']
+    list_display = ['memoryId', 'userId__nickname', 'items']
     search_fields = ['userId__nickname', 'items']
