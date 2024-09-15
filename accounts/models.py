@@ -11,6 +11,7 @@ class User(AbstractUser):
     createdAt = models.DateTimeField(default=timezone.now)
     birth = models.DateField(null=True, blank=True)
     sex = models.CharField(max_length=10, null=True, blank=True)
+    is_product_writer = models.BooleanField(default=False)
     
 
 class Memories(models.Model):
