@@ -81,8 +81,7 @@ def userinfo(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
-    
-# 유저 정보를 수정하는 API
+
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
@@ -93,7 +92,7 @@ def update_user_info(request, userId):
         # 클라이언트로부터 데이터 받기
         nickname = request.data.get('nickName')
         email = request.data.get('email')
-        birth = request.data.get('birth')  # 클라이언트로부터 받은 생년월일 형식 '1999-03-20'
+        birth = request.data.get('birth')  # 클라이언트로부터 받은 생년월일 형식 YYMMDD (ex. 990320)
         sex = request.data.get('sex')
 
         # 닉네임, 이메일, 생일, 성별 정보 업데이트
@@ -102,13 +101,19 @@ def update_user_info(request, userId):
         if email:
             user.email = email
 
-        # 생년월일 처리: 'YYYY-MM-DD' 형식으로 바로 변환
+        # 생년월일 처리: YYMMDD 형식을 YYYY-MM-DD로 변환
         if birth:
             try:
-                # 클라이언트에서 'YYYY-MM-DD' 형식으로 받은 생년월일 처리
-                user.birth = datetime.strptime(birth, '%Y-%m-%d').date()
+                birth = str(birth)  # birth를 문자열로 변환
+                if len(birth) == 6:  # 형식 확인
+                    # YY가 00~21 사이는 2000년대, 그 외는 1900년대로 가정
+                    year_prefix = '19' if int(birth[:2]) > 21 else '20'
+                    formatted_birth = f'{year_prefix}{birth[:2]}-{birth[2:4]}-{birth[4:6]}'
+                    user.birth = datetime.strptime(formatted_birth, '%Y-%m-%d').date()
+                else:
+                    return JsonResponse({'error': 'Invalid birth format. Use YYMMDD'}, status=400, json_dumps_params={'ensure_ascii': False})
             except ValueError:
-                return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400, json_dumps_params={'ensure_ascii': False})
+                return JsonResponse({'error': 'Invalid date format'}, status=400, json_dumps_params={'ensure_ascii': False})
 
         if sex:
             user.sex = sex
