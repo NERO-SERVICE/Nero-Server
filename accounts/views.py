@@ -4,10 +4,12 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import User
-from .serializers import UserSerializer
+from rest_framework.views import APIView
+from .models import User, Memories
+from .serializers import UserSerializer, MemoriesSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.shortcuts import get_object_or_404
 from datetime import datetime
 
 def get_tokens_for_user(user):
@@ -122,3 +124,50 @@ def update_user_info(request, userId):
         return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
+
+class MemoriesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, userId):
+        user = get_object_or_404(User, id=userId)
+        if user != request.user:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+
+        memories = Memories.objects.filter(userId=user)
+        serializer = MemoriesSerializer(memories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, userId):
+        user = get_object_or_404(User, id=userId)
+        if user != request.user:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = MemoriesSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(userId=user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, userId):
+        user = get_object_or_404(User, id=userId)
+        if user != request.user:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+
+        memoryId = request.data.get('memoryId')
+        memory = get_object_or_404(Memories, memoryId=memoryId, userId=user)
+        serializer = MemoriesSerializer(memory, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, userId):
+        user = get_object_or_404(User, id=userId)
+        if user != request.user:
+            return Response({"detail": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
+
+        memoryId = request.data.get('memoryId')
+        memory = get_object_or_404(Memories, memoryId=memoryId, userId=user)
+        memory.delete()
+        return Response({"detail": "Memory deleted"}, status=status.HTTP_204_NO_CONTENT)
