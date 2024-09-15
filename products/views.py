@@ -6,8 +6,6 @@ from django.shortcuts import get_object_or_404
 from .models import DrfProduct
 from .serializers import DrfProductSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
-import logging
-
 
 class CreateProductView(APIView):
     permission_classes = [IsAuthenticated]
