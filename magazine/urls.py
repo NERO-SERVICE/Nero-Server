@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import ListMagazineView, CreateMagazineView, RetrieveMagazineView, UpdateMagazineView, DeleteMagazineView
+from .views import ListMagazineView, CreateMagazineView, RetrieveMagazineView, UpdateMagazineView, DeleteMagazineView, RecentMagazinesView
 
 app_name = "magazine"
 
@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:id>/', RetrieveMagazineView.as_view(), name='get_magazine'),
     path('<int:id>/update/', UpdateMagazineView.as_view(), name='update_magazine'),
     path('<int:id>/delete/', DeleteMagazineView.as_view(), name='delete_magazine'),
+    path('recent/', RecentMagazinesView.as_view(), name='recent_magazines'),
 ]
