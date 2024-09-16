@@ -1,7 +1,7 @@
 from django.db import models
 from django.conf import settings
 
-class DrfDrugArchive(models.Model):
+class DrugArchive(models.Model):
     archiveId = models.AutoField(primary_key=True)
     drugName = models.CharField(max_length=100)
     target = models.CharField(max_length=100, null=True, blank=True)
@@ -11,7 +11,7 @@ class DrfDrugArchive(models.Model):
         return self.drugName
 
 
-class DrfMyDrugArchive(models.Model):
+class MyDrugArchive(models.Model):
     myArchiveId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     archiveId = models.IntegerField()
@@ -23,7 +23,7 @@ class DrfMyDrugArchive(models.Model):
         return f"{self.owner}'s selected {self.drugName}"
 
 
-class DrfClinics(models.Model):
+class Clinics(models.Model):
     clinicId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     recentDay = models.DateTimeField()
@@ -31,9 +31,6 @@ class DrfClinics(models.Model):
     createdAt = models.DateTimeField()
     updatedAt = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=255)
-    clinicLatitude = models.FloatField(null=True, blank=True)
-    clinicLongitude = models.FloatField(null=True, blank=True)
-    locationLabel = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
 
     def __str__(self):
@@ -43,10 +40,10 @@ class DrfClinics(models.Model):
         ordering = ['-updatedAt']
 
 
-class DrfDrug(models.Model):
+class Drug(models.Model):
     drugId = models.AutoField(primary_key=True)
-    clinic = models.ForeignKey(DrfClinics, related_name='drugs', on_delete=models.CASCADE)
-    myDrugArchive = models.ForeignKey(DrfMyDrugArchive, on_delete=models.CASCADE)
+    clinic = models.ForeignKey(Clinics, related_name='drugs', on_delete=models.CASCADE)
+    myDrugArchive = models.ForeignKey(MyDrugArchive, on_delete=models.CASCADE)
     number = models.IntegerField(default=0)
     initialNumber = models.IntegerField(default=0)
     time = models.CharField(max_length=50, choices=[
