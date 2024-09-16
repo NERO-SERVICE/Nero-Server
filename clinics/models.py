@@ -33,7 +33,7 @@ class Clinics(models.Model):
     description = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return self.recentDay
+        return self.recentDay.strftime('%Y-%m-%d')
 
     class Meta:
         ordering = ['-updatedAt']
@@ -53,7 +53,7 @@ class Drug(models.Model):
     allow = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Drugs for {self.clinic.recentDay}"
+        return f"Drugs for {self.clinic.recentDay.strftime('%Y-%m-%d')}"
 
     def consume_one(self):
         if self.number > 0:
