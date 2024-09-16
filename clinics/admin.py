@@ -3,8 +3,8 @@ from .models import Clinics, Drug, DrugArchive, MyDrugArchive
 
 @admin.register(Clinics)
 class ClinicsAdmin(admin.ModelAdmin):
-    list_display = ['clinicId', 'owner', 'title', 'description', 'createdAt', 'updatedAt']
-    search_fields = ['title', 'description', 'owner__username']
+    list_display = ['clinicId', 'owner', 'recentDay', 'description', 'createdAt', 'updatedAt']
+    search_fields = ['description', 'owner__username']
     list_filter = ['createdAt', 'updatedAt', 'owner']
 
 @admin.register(Drug)

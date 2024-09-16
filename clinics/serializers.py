@@ -27,7 +27,7 @@ class ClinicsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Clinics
-        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'title', 'description', 'drugs']
+        fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'description', 'drugs']
 
     def get_nickname(self, obj):
         return obj.owner.nickname
