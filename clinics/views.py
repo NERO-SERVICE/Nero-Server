@@ -161,3 +161,43 @@ class ListDrugArchivesView(APIView):
         drug_archives = DrugArchive.objects.all()
         serializer = DrugArchiveSerializer(drug_archives, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class RollbackConsumeDrugsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        date_to_rollback = request.data.get('date', None)
+        
+        if not date_to_rollback:
+            return Response({'error': 'No date provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # 입력된 날짜를 Python의 날짜 형식으로 변환
+            rollback_date = timezone.datetime.strptime(date_to_rollback, '%Y-%m-%d').date()
+        except ValueError:
+            return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        korea_time = timezone.now().astimezone(pytz_timezone('Asia/Seoul')).date()
+
+        # 롤백하려는 날짜가 오늘 이후인 경우 롤백 불가
+        if rollback_date > korea_time:
+            return Response({'error': 'Cannot rollback future dates.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 해당 날짜에 소비된 약물들 가져오기
+        drugs_to_rollback = Drug.objects.filter(
+            clinic__owner=request.user,
+            allow=False,
+            clinic__recentDay__date=rollback_date
+        )
+
+        if not drugs_to_rollback.exists():
+            return Response({'detail': 'No consumed drugs found for the given date.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # 약물 소비 상태 롤백 (allow = True로 변경) 및 number 복구
+        for drug in drugs_to_rollback:
+            if drug.number < drug.initialNumber:
+                drug.number += 1  # 이미 소비한 약물의 수량 복구
+            drug.allow = True   # allow 상태를 롤백
+            drug.save()
+
+        return Response({'detail': f'Successfully rolled back drug consumption for {date_to_rollback}.'}, status=status.HTTP_200_OK)
