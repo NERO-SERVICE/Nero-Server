@@ -65,3 +65,16 @@ class ListMagazineView(APIView):
             return Response({'detail': 'No magazines found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = MagazineSerializer(magazineList, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class RecentMagazinesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # 최신 3개의 매거진을 가져옴
+        recent_magazines = Magazine.objects.all().order_by('-createdAt')[:3]
+        if not recent_magazines.exists():
+            return Response({'detail': 'No recent magazines found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = MagazineSerializer(recent_magazines, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
