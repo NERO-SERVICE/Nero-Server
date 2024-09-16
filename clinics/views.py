@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import DrfClinics, DrfDrug, DrfDrugArchive, DrfMyDrugArchive
-from .serializers import DrfClinicsSerializer, DrfDrugSerializer, DrfDrugArchiveSerializer
+from .models import Clinics, Drug, DrugArchive, MyDrugArchive
+from .serializers import ClinicsSerializer, DrugSerializer, DrugArchiveSerializer
 from django.utils import timezone
 from django.db import transaction
 from pytz import timezone as pytz_timezone
@@ -15,7 +15,7 @@ class CreateClinicView(APIView):
     @transaction.atomic
     def post(self, request):
         print("Request Data:", request.data)
-        serializer = DrfClinicsSerializer(data=request.data)
+        serializer = ClinicsSerializer(data=request.data)
 
         if serializer.is_valid():
             clinic = serializer.save(owner=request.user)
@@ -30,18 +30,18 @@ class UpdateClinicView(APIView):
 
     @transaction.atomic
     def put(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        serializer = DrfClinicsSerializer(clinic, data=request.data, partial=True)
+        clinic = get_object_or_404(Clinics, clinicId=clinicId, owner=request.user)
+        serializer = ClinicsSerializer(clinic, data=request.data, partial=True)
 
         if serializer.is_valid():
             clinic = serializer.save()
 
             # 기존 약물 삭제 후 새롭게 추가
-            DrfDrug.objects.filter(clinic=clinic).delete()
+            Drug.objects.filter(clinic=clinic).delete()
 
             for drug_data in request.data.get('drugs', []):
-                # DrfMyDrugArchive를 생성하거나 수정
-                my_drug_archive, created = DrfMyDrugArchive.objects.get_or_create(
+                # MyDrugArchive를 생성하거나 수정
+                my_drug_archive, created = MyDrugArchive.objects.get_or_create(
                     owner=clinic.owner,
                     archiveId=drug_data['myDrugArchive']['archiveId'],
                     defaults={
@@ -51,8 +51,8 @@ class UpdateClinicView(APIView):
                     }
                 )
                 
-                # DrfDrug 생성
-                DrfDrug.objects.create(
+                # Drug 생성
+                Drug.objects.create(
                     clinic=clinic,
                     myDrugArchive=my_drug_archive,
                     number=drug_data['number'],
@@ -65,37 +65,35 @@ class UpdateClinicView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# 특정 클리닉 조회
+
 class RetrieveClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        serializer = DrfClinicsSerializer(clinic, context={'request': request})
+        clinic = get_object_or_404(Clinics, clinicId=clinicId, owner=request.user)
+        serializer = ClinicsSerializer(clinic, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 클리닉 삭제
 class DeleteClinicView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
+        clinic = get_object_or_404(Clinics, clinicId=clinicId, owner=request.user)
         clinic.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# 사용자가 소유한 모든 클리닉 리스트 조회
 class ListClinicsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        clinics = DrfClinics.objects.filter(owner=request.user).prefetch_related('drugs')
+        clinics = Clinics.objects.filter(owner=request.user).prefetch_related('drugs')
         
         if not clinics.exists():
             return Response({'detail': 'No clinics found for this user.'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = DrfClinicsSerializer(clinics, many=True, context={'request': request})
+        serializer = ClinicsSerializer(clinics, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -113,14 +111,14 @@ class ConsumeSelectedDrugsView(APIView):
         tomorrow_start = today_start + timezone.timedelta(days=1)
         
         if korea_time >= tomorrow_start:
-            drugs_to_reset = DrfDrug.objects.filter(clinic__owner=request.user, allow=False)
+            drugs_to_reset = Drug.objects.filter(clinic__owner=request.user, allow=False)
             for drug in drugs_to_reset:
                 drug.reset_allow()
         
         consumed_drugs = []
 
         for drug_id in drug_ids:
-            drug = get_object_or_404(DrfDrug, drugId=drug_id, clinic__owner=request.user)
+            drug = get_object_or_404(Drug, drugId=drug_id, clinic__owner=request.user)
             
             if drug.number == 0:
                 return Response({'error': f'Drug {drug.myDrugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -150,16 +148,16 @@ class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, clinicId):
-        clinic = get_object_or_404(DrfClinics, clinicId=clinicId, owner=request.user)
-        drugs = DrfDrug.objects.filter(clinic=clinic).select_related('myDrugArchive')
-        serializer = DrfDrugSerializer(drugs, many=True)
+        clinic = get_object_or_404(Clinics, clinicId=clinicId, owner=request.user)
+        drugs = Drug.objects.filter(clinic=clinic).select_related('myDrugArchive')
+        serializer = DrugSerializer(drugs, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# DrfDrugArchive 리스트 조회
+
 class ListDrugArchivesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        drug_archives = DrfDrugArchive.objects.all()
-        serializer = DrfDrugArchiveSerializer(drug_archives, many=True)
+        drug_archives = DrugArchive.objects.all()
+        serializer = DrugArchiveSerializer(drug_archives, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
