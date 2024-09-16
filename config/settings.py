@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'news',
     'mypage',
     'notification',
+    'magazine',
 ]
 
 SITE_ID = 1
