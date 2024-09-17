@@ -63,3 +63,21 @@ class SelfRecordBulkUpdateView(generics.GenericAPIView):
         logs.delete()
 
         return Response({"detail": "Logs deleted successfully"}, status=status.HTTP_200_OK)
+    
+    
+class SelfRecordUncheckedListView(generics.ListAPIView):
+    serializer_class = DailyLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        queryset = DailyLog.objects.filter(
+            owner=self.request.user,
+            date__year=year,
+            date__month=month,
+            date__day=day,
+            is_checked=False
+        ).order_by('date')
