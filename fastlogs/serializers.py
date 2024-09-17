@@ -5,4 +5,4 @@ class DailyLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyLog
         fields = ['id', 'content', 'date', 'is_checked']
-        read_only_fields = ['id', 'date']
+        read_only_fields = ['id']
