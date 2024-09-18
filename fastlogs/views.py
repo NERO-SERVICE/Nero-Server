@@ -81,3 +81,5 @@ class SelfRecordUncheckedListView(generics.ListAPIView):
             date__day=day,
             is_checked=False
         ).order_by('date')
+        
+        return queryset
