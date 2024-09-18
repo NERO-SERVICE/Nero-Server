@@ -129,12 +129,22 @@ def update_user_info(request, userId):
 class MemoriesView(APIView):
     permission_classes = [IsAuthenticated]
 
+    # ID 별로 memories 리스트 가져오기
     def get(self, request):
-        # 현재 로그인한 유저로 Memories 가져오기
-        memories = Memories.objects.filter(userId=request.user)
-        serializer = MemoriesSerializer(memories, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        memory_id = request.query_params.get('memoryId')
+        
+        if memory_id:
+            # 특정 memoryId로 조회
+            memory = get_object_or_404(Memories, memoryId=memory_id, userId=request.user)
+            serializer = MemoriesSerializer(memory)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            # 모든 memories 조회
+            memories = Memories.objects.filter(userId=request.user)
+            serializer = MemoriesSerializer(memories, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # memories 생성 및 업데이트
     def post(self, request):
         # 현재 로그인한 유저의 memories가 이미 존재하는지 확인
         memories = Memories.objects.filter(userId=request.user).first()
@@ -154,19 +164,26 @@ class MemoriesView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # ID로 memories 수정
     def patch(self, request):
-        # 현재 로그인한 유저의 특정 memory 수정
-        memoryId = request.data.get('memoryId')
-        memory = get_object_or_404(Memories, memoryId=memoryId, userId=request.user)
+        memory_id = request.data.get('memoryId')
+        memory = get_object_or_404(Memories, memoryId=memory_id, userId=request.user)
         serializer = MemoriesSerializer(memory, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # 특정 memoryId 리스트로 memories 삭제
     def delete(self, request):
-        # 현재 로그인한 유저의 특정 memory 삭제
-        memoryId = request.data.get('memoryId')
-        memory = get_object_or_404(Memories, memoryId=memoryId, userId=request.user)
-        memory.delete()
-        return Response({"detail": "Memory deleted"}, status=status.HTTP_204_NO_CONTENT)
+        memory_ids = request.query_params.getlist('memoryId')
+        
+        if not memory_ids:
+            return Response({"error": "No memoryId provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        memories = Memories.objects.filter(memoryId__in=memory_ids, userId=request.user)
+        if memories.exists():
+            memories.delete()
+            return Response({"detail": f"Deleted {len(memory_ids)} memories"}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"error": "No memories found for the given memoryId(s)"}, status=status.HTTP_404_NOT_FOUND)
