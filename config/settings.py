@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'mypage',
     'notification',
     'magazine',
+    'menstruation',
 ]
 
 SITE_ID = 1
