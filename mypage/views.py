@@ -5,44 +5,50 @@ from .models import YearlyDoseLog, YearlySideEffectLog
 import calendar
 
 class YearlyLogView(APIView):
-    def get(self, request, year, month):
+    def get(self, request, year):
         user = request.user
         log_type = request.query_params.get('type', 'all')
         
-        dose_logs = YearlyDoseLog.objects.filter(owner=user, date__year=year, date__month=month)
-        side_effect_logs = YearlySideEffectLog.objects.filter(owner=user, date__year=year, date__month=month)
+        dose_logs = YearlyDoseLog.objects.filter(owner=user, date__year=year)
+        side_effect_logs = YearlySideEffectLog.objects.filter(owner=user, date__year=year)
         
-        month_start, month_end = calendar.monthrange(year, month)
+        # 월별 데이터를 저장할 딕셔너리
+        monthly_data = {}
+        
+        for month in range(1, 13):
+            month_dose_logs = dose_logs.filter(date__month=month)
+            month_side_effect_logs = side_effect_logs.filter(date__month=month)
+            
+            month_start_day, month_end_day = calendar.monthrange(year, month)
+            adjusted_month_start = (month_start_day + 1) % 7  # 일요일을 0으로 설정
 
-        adjusted_month_start = (month_start + 1) % 7 # 일요일 : index 0
+            dose_check = {log.date.day: log.doseAction for log in month_dose_logs}
+            side_effect_check = {log.date.day: log.sideEffectAction for log in month_side_effect_logs}
+            
+            # type에 따른 데이터 저장
+            if log_type == 'all':
+                monthly_data[month] = {
+                    'date': f'{year}-{month}',
+                    'doseCheck': dose_check,
+                    'sideEffectCheck': side_effect_check,
+                    'monthStart': adjusted_month_start,
+                    'monthEnd': month_end_day
+                }
+            elif log_type == 'dose':
+                monthly_data[month] = {
+                    'date': f'{year}-{month}',
+                    'doseCheck': dose_check,
+                    'monthStart': adjusted_month_start,
+                    'monthEnd': month_end_day
+                }
+            elif log_type == 'side_effect':
+                monthly_data[month] = {
+                    'date': f'{year}-{month}',
+                    'sideEffectCheck': side_effect_check,
+                    'monthStart': adjusted_month_start,
+                    'monthEnd': month_end_day
+                }
+            else:
+                return Response({"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
         
-        dose_check = {log.date.day: log.doseAction for log in dose_logs}
-        side_effect_check = {log.date.day: log.sideEffectAction for log in side_effect_logs}
-        
-        # type에 따른 데이터 반환
-        if log_type == 'all':
-            response_data = {
-                'date': f'{year}-{month}',
-                'doseCheck': dose_check,
-                'sideEffectCheck': side_effect_check,
-                'monthStart': adjusted_month_start,
-                'monthEnd': month_end
-            }
-        elif log_type == 'dose':
-            response_data = {
-                'date': f'{year}-{month}',
-                'doseCheck': dose_check,
-                'monthStart': adjusted_month_start,
-                'monthEnd': month_end
-            }
-        elif log_type == 'side_effect':
-            response_data = {
-                'date': f'{year}-{month}',
-                'sideEffectCheck': side_effect_check,
-                'monthStart': adjusted_month_start,
-                'monthEnd': month_end
-            }
-        else:
-            return Response({"error": "Invalid type"}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(response_data, status=status.HTTP_200_OK)
+        return Response(monthly_data, status=status.HTTP_200_OK)

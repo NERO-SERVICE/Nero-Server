@@ -4,5 +4,5 @@ from .views import YearlyLogView
 app_name = 'mypage'
 
 urlpatterns = [
-    path('yearly-log/<int:year>/<int:month>/', YearlyLogView.as_view(), name='yearly-log'),
+    path('yearly-log/<int:year>/', YearlyLogView.as_view(), name='yearly-log'),
 ]
