@@ -8,4 +8,3 @@ urlpatterns = [
     path('<int:pk>/', MenstruationRetrieveUpdateDestroyView.as_view(), name='menstruation-detail'),
     path('cycles/', MenstruationCycleView.as_view(), name='menstruation-cycles'),
 ]
-
