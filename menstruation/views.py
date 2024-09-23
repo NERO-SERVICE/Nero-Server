@@ -15,6 +15,12 @@ class MenstruationListCreateView(generics.ListCreateAPIView):
         return Menstruation.objects.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
+        start_date = serializer.validated_data.get('startDate')
+        end_date = serializer.validated_data.get('endDate')
+
+        if end_date < start_date:
+            return Response({"error": "종료일은 시작일보다 빠를 수 없습니다."}, status=400)
+
         serializer.save(owner=self.request.user)
 
 class MenstruationRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
