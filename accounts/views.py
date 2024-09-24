@@ -89,12 +89,12 @@ def userinfo(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
-def update_user_info(request, userId):
+def update_user_info(request):
     try:
         user = request.user
 
         # 클라이언트로부터 데이터 받기
-        nickname = request.data.get('nickname')  # 'nickname' 소문자 n
+        nickname = request.data.get('nickname')
         email = request.data.get('email')
         birth = request.data.get('birth')
         sex = request.data.get('sex')

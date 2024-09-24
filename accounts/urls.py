@@ -9,6 +9,6 @@ urlpatterns = [
     path('login/', login, name='login'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('userinfo/', userinfo, name='userinfo'),
-    path('<int:userId>/update/', update_user_info, name='update_user_info'),
+    path('update/', update_user_info, name='update_user_info'),
     path('memories/', MemoriesView.as_view(), name='memories'),
 ]
