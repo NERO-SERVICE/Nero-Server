@@ -94,7 +94,7 @@ def update_user_info(request, userId):
         user = request.user
 
         # 클라이언트로부터 데이터 받기
-        nickname = request.data.get('nickName')
+        nickname = request.data.get('nickname')  # 'nickname' 소문자 n
         email = request.data.get('email')
         birth = request.data.get('birth')
         sex = request.data.get('sex')
@@ -105,13 +105,12 @@ def update_user_info(request, userId):
         if email:
             user.email = email
 
-        # 생년월일 처리: ISO 8601 형식의 DateTime을 Date로 변환하여 저장
+        # 생년월일 처리
         if birth:
             try:
-                # '1999-03-20T00:00:00.000' 형식의 문자열을 Date로 변환
-                user.birth = datetime.fromisoformat(birth).date()  # ISO 형식의 DateTime을 받아 Date 객체로 변환
+                user.birth = datetime.fromisoformat(birth).date()
             except ValueError:
-                return JsonResponse({'error': 'Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sss)'}, status=400, json_dumps_params={'ensure_ascii': False})
+                return JsonResponse({'error': 'Invalid date format. Use ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sss)'}, status=400)
 
         if sex:
             user.sex = sex
@@ -121,9 +120,9 @@ def update_user_info(request, userId):
         return Response({'message': 'User information updated successfully'}, status=status.HTTP_200_OK)
 
     except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 class MemoriesView(APIView):
