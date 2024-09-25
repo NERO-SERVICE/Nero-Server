@@ -1,5 +1,11 @@
 from django.urls import path
-from .views import SelfRecordListCreateView, SelfRecordUpdateDeleteView, SelfRecordBulkUpdateView, SelfRecordUncheckedListView
+from .views import (
+    SelfRecordListCreateView, 
+    SelfRecordUpdateDeleteView, 
+    SelfRecordBulkUpdateView, 
+    SelfRecordUncheckedListView,
+    SelfRecordDatesView
+)
 
 app_name = 'fastlogs'
 
@@ -8,4 +14,5 @@ urlpatterns = [
     path('<int:pk>/', SelfRecordUpdateDeleteView.as_view(), name='self-record-update-delete'),
     path('bulk/', SelfRecordBulkUpdateView.as_view(), name='self-record-bulk-update-delete'),
     path('unchecked/', SelfRecordUncheckedListView.as_view(), name='self-record-unchecked-list'),
+    path('dates/', SelfRecordDatesView.as_view(), name='self-record-dates'),
 ]
