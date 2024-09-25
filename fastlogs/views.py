@@ -3,7 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.response import Response
 from .models import DailyLog
-from .serializers import DailyLogSerializer
+from .serializers import DailyLogSerializer, DailyLogDateSerializer
 
 class SelfRecordListCreateView(generics.ListCreateAPIView):
     serializer_class = DailyLogSerializer
@@ -83,3 +83,24 @@ class SelfRecordUncheckedListView(generics.ListAPIView):
         ).order_by('date')
         
         return queryset
+    
+    
+class SelfRecordDatesView(generics.ListAPIView):
+    serializer_class = DailyLogDateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        queryset = DailyLog.objects.filter(owner=self.request.user)
+        if year:
+            queryset = queryset.filter(date__year=year)
+        if month:
+            queryset = queryset.filter(date__month=month)
+        return queryset.values('date').distinct()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        dates = [entry['date'] for entry in serializer.data]
+        return Response(dates)

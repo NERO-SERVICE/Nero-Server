@@ -6,3 +6,6 @@ class DailyLogSerializer(serializers.ModelSerializer):
         model = DailyLog
         fields = ['id', 'content', 'date', 'is_checked']
         read_only_fields = ['id']
+
+class DailyLogDateSerializer(serializers.Serializer):
+    date = serializers.DateField()
