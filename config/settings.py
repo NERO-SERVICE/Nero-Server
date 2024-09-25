@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'notification',
     'magazine',
     'menstruation',
+    'mail',
 ]
 
 SITE_ID = 1
