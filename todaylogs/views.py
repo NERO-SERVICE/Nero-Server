@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Today, SelfRecord, Question, SurveyResponse, SideEffectResponse
 from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, SurveyResponseSerializer, SideEffectResponseSerializer
+from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
     serializer_class = TodaySerializer
@@ -148,3 +149,54 @@ class SelfRecordResponseListView(generics.ListAPIView):
             created_at__month=month,
             created_at__day=day
         )
+        
+class SurveyRecordedDatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        year = request.query_params.get('year')
+        if not year:
+            return Response({"error": "Year parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        dates = SurveyResponse.objects.filter(
+            today__owner=request.user,
+            today__created_at__year=year
+        ).annotate(date=TruncDate('today__created_at')).values_list('date', flat=True).distinct()
+
+        date_strings = [date.isoformat() for date in dates]
+
+        return Response(date_strings)
+
+class SideEffectRecordedDatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        year = request.query_params.get('year')
+        if not year:
+            return Response({"error": "Year parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        dates = SideEffectResponse.objects.filter(
+            today__owner=request.user,
+            today__created_at__year=year
+        ).annotate(date=TruncDate('today__created_at')).values_list('date', flat=True).distinct()
+
+        date_strings = [date.isoformat() for date in dates]
+
+        return Response(date_strings)
+
+class SelfRecordRecordedDatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        year = request.query_params.get('year')
+        if not year:
+            return Response({"error": "Year parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        dates = SelfRecord.objects.filter(
+            today__owner=request.user,
+            created_at__year=year
+        ).annotate(date=TruncDate('created_at')).values_list('date', flat=True).distinct()
+
+        date_strings = [date.isoformat() for date in dates]
+
+        return Response(date_strings)
