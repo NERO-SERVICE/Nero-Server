@@ -134,14 +134,17 @@ def delete_account(request):
     try:
         user = request.user
         user.soft_delete()  # Soft delete
-        
+
         # 탈퇴한 유저의 토큰을 무효화합니다.
         token = request.auth  # 현재 인증된 JWT 토큰 가져오기
         if token:
             try:
-                BlacklistedToken.objects.create(token=token)
+                # 토큰이 이미 무효화되어 있을 경우 예외 처리
+                if not BlacklistedToken.objects.filter(token=token).exists():
+                    BlacklistedToken.objects.create(token=token)
             except Exception as e:
-                return JsonResponse({'error': 'Failed to blacklist token'}, status=500, json_dumps_params={'ensure_ascii': False})
+                # 토큰 블랙리스트 오류가 발생해도 탈퇴 처리에는 영향을 주지 않도록 합니다.
+                print(f"Token blacklisting failed: {e}")
 
         # Soft delete 시점 반환
         return Response({
@@ -150,7 +153,6 @@ def delete_account(request):
         }, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
-
 
 
 class MemoriesView(APIView):
