@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'social_django',
     
     # project app
-    'main',
     'accounts',
     'clinics',
     'todaylogs',
