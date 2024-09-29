@@ -7,7 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['userId', 'kakaoId', 'createdAt', 'nickname', 'email', 'birth', 'sex']
-        
+
 class MemoriesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Memories

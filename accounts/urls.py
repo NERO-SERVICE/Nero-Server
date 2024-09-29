@@ -2,7 +2,7 @@ from django.urls import path
 from .views import kakao_auth, userinfo, update_user_info, delete_account, MemoriesView
 from rest_framework_simplejwt.views import TokenRefreshView
 
-app_name='accounts'
+app_name = 'accounts'
 
 urlpatterns = [
     path('auth/kakao/', kakao_auth, name='kakao_auth'),
