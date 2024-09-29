@@ -134,19 +134,23 @@ def delete_account(request):
     try:
         user = request.user
         user.soft_delete()  # Soft delete
-
+        
         # 탈퇴한 유저의 토큰을 무효화합니다.
         token = request.auth  # 현재 인증된 JWT 토큰 가져오기
         if token:
             try:
-                # 토큰을 블랙리스트에 추가하여 무효화
                 BlacklistedToken.objects.create(token=token)
             except Exception as e:
                 return JsonResponse({'error': 'Failed to blacklist token'}, status=500, json_dumps_params={'ensure_ascii': False})
 
-        return Response({'message': 'Account soft deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        # Soft delete 시점 반환
+        return Response({
+            'message': 'Account soft deleted successfully',
+            'deletedAt': user.deleted_at
+        }, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
 
 
 class MemoriesView(APIView):
@@ -197,9 +201,13 @@ class MemoriesView(APIView):
         
         memories = Memories.objects.filter(memoryId__in=memory_ids, userId=request.user)
         if memories.exists():
-            # Soft delete the selected memories
+            deleted_memories = []
             for memory in memories:
                 memory.soft_delete()
-            return Response({"detail": f"Soft deleted {len(memory_ids)} memories"}, status=status.HTTP_204_NO_CONTENT)
+                deleted_memories.append({
+                    "memoryId": memory.memoryId,
+                    "deletedAt": memory.deleted_at
+                })
+            return Response({"detail": f"Soft deleted {len(memory_ids)} memories", "deletedMemories": deleted_memories}, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({"error": "No memories found for the given memoryId(s)"}, status=status.HTTP_404_NOT_FOUND)
