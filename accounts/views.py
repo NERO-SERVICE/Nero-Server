@@ -1,5 +1,7 @@
 import requests
+from django.contrib.auth import get_user_model
 from django.http import JsonResponse
+from django.db import IntegrityError
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +14,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 
+User = get_user_model()
+
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     
@@ -20,8 +24,15 @@ def get_tokens_for_user(user):
         'accessToken': str(refresh.access_token),
     }
 
+def generate_unique_username(nickname): # 카카오 닉네임을 기반으로 고유한 username을 생성
+    base_username = nickname
+    username = base_username
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base_username}_{counter}"
+        counter += 1
+    return username
 
-# 카카오 엑세스 토큰을 받으면 JWT accessToken과 refreshToken 생성 및 제공
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def kakao_auth(request):
@@ -31,6 +42,7 @@ def kakao_auth(request):
         return JsonResponse({'error': 'Access token is required'}, status=400, json_dumps_params={'ensure_ascii': False})
 
     try:
+        # 카카오 API를 통해 사용자 정보 가져오기
         user_info_url = 'https://kapi.kakao.com/v2/user/me'
         headers = {'Authorization': f'Bearer {accessToken}'}
         user_info_response = requests.get(user_info_url, headers=headers)
@@ -38,32 +50,47 @@ def kakao_auth(request):
         user_info = user_info_response.json()
 
         kakaoId = user_info.get('id')
-
         if not kakaoId:
             return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=400, json_dumps_params={'ensure_ascii': False})
 
+        kakaoNickname = user_info.get('properties', {}).get('nickname', '')
+        if not kakaoNickname:
+            kakaoNickname = f'kakao_{kakaoId}'
+
+        # 고유한 username 생성
+        unique_username = generate_unique_username(kakaoNickname)
+
+        # 사용자 생성 또는 조회
         user, created = User.objects.get_or_create(
             kakaoId=kakaoId,
+            defaults={
+                'username': unique_username,
+                'nickname': None,
+                'email': None,
+                'birth': None, 
+                'sex': None,
+            }
         )
 
         if created:
             user.set_unusable_password()
             user.save()
 
-        # 'needsSignup' 플래그 설정: 신규 사용자이거나 닉네임이 없는 경우
         needs_signup = False
         if created or not user.nickname:
             needs_signup = True
 
-        # JWT 토큰 생성
         tokens = get_tokens_for_user(user)
 
         return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
+    except IntegrityError as e:
+        return JsonResponse({'error': 'Username already exists'}, status=400, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
