@@ -13,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
 from datetime import datetime
+from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 
 User = get_user_model()
 
@@ -133,6 +134,16 @@ def delete_account(request):
     try:
         user = request.user
         user.soft_delete()  # Soft delete
+
+        # 탈퇴한 유저의 토큰을 무효화합니다.
+        token = request.auth  # 현재 인증된 JWT 토큰 가져오기
+        if token:
+            try:
+                # 토큰을 블랙리스트에 추가하여 무효화
+                BlacklistedToken.objects.create(token=token)
+            except Exception as e:
+                return JsonResponse({'error': 'Failed to blacklist token'}, status=500, json_dumps_params={'ensure_ascii': False})
+
         return Response({'message': 'Account soft deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
