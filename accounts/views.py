@@ -45,34 +45,25 @@ def kakao_auth(request):
         user, created = User.objects.get_or_create(
             kakaoId=kakaoId,
         )
-        
+
         if created:
-            user.set_unusable_password()  # 비밀번호를 사용하지 않는 계정
+            user.set_unusable_password()
             user.save()
+
+        # 'needsSignup' 플래그 설정: 신규 사용자이거나 닉네임이 없는 경우
+        needs_signup = False
+        if created or not user.nickname:
+            needs_signup = True
 
         # JWT 토큰 생성
         tokens = get_tokens_for_user(user)
-        
-        return Response({'tokens': tokens}, status=status.HTTP_200_OK)
+
+        return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
 
     except requests.exceptions.RequestException as e:
         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
-
-
-# JWT accessToken을 보내면 유저 정보를 보냄
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-@authentication_classes([JWTAuthentication])
-def login(request):
-    try:
-        user = request.user
-        serializer = UserSerializer(user)
-        return Response({'user': serializer.data}, status=status.HTTP_200_OK)
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
-    
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -123,6 +114,18 @@ def update_user_info(request):
         return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+def delete_account(request):
+    try:
+        user = request.user
+        user.delete()
+        return Response({'message': 'Account deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
 
 
 class MemoriesView(APIView):
