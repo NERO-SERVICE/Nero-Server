@@ -15,12 +15,12 @@ class CreateClinicView(APIView):
     @transaction.atomic
     def post(self, request):
         print("Request Data:", request.data)
-        serializer = ClinicsSerializer(data=request.data)
-
+        serializer = ClinicsSerializer(data=request.data, context={'request': request})
+    
         if serializer.is_valid():
-            clinic = serializer.save(owner=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+            clinic = serializer.save()
+            return Response(ClinicsSerializer(clinic, context={'request': request}).data, status=status.HTTP_201_CREATED)
+    
         print("Validation Errors:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -31,23 +31,24 @@ class UpdateClinicView(APIView):
     @transaction.atomic
     def put(self, request, clinicId):
         clinic = get_object_or_404(Clinics, clinicId=clinicId, owner=request.user)
-        serializer = ClinicsSerializer(clinic, data=request.data, partial=True)
-
+        serializer = ClinicsSerializer(clinic, data=request.data, partial=True, context={'request': request})
+    
         if serializer.is_valid():
             clinic = serializer.save()
-
+    
             # 기존 약물 삭제 후 새롭게 추가
             Drug.objects.filter(clinic=clinic).delete()
-
+    
             for drug_data in request.data.get('drugs', []):
                 # MyDrugArchive를 생성하거나 수정
+                my_drug_archive_data = drug_data.get('myDrugArchive', {})
                 my_drug_archive, created = MyDrugArchive.objects.get_or_create(
                     owner=clinic.owner,
-                    archiveId=drug_data['myDrugArchive']['archiveId'],
+                    archiveId=my_drug_archive_data['archiveId'],
                     defaults={
-                        'drugName': drug_data['myDrugArchive']['drugName'],
-                        'target': drug_data['myDrugArchive']['target'],
-                        'capacity': drug_data['myDrugArchive']['capacity'],
+                        'drugName': my_drug_archive_data.get('drugName', ''),
+                        'target': my_drug_archive_data.get('target', ''),
+                        'capacity': my_drug_archive_data.get('capacity', ''),
                     }
                 )
                 
@@ -55,16 +56,15 @@ class UpdateClinicView(APIView):
                 Drug.objects.create(
                     clinic=clinic,
                     myDrugArchive=my_drug_archive,
-                    number=drug_data['number'],
-                    initialNumber=drug_data['initialNumber'],
-                    time=drug_data['time'],
-                    allow=drug_data['allow']
+                    number=drug_data.get('number', 0),
+                    initialNumber=drug_data.get('initialNumber', 0),
+                    time=drug_data.get('time', '아침'),
+                    allow=drug_data.get('allow', True)
                 )
-
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
+    
+            return Response(ClinicsSerializer(clinic, context={'request': request}).data, status=status.HTTP_200_OK)
+    
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class RetrieveClinicView(APIView):
     permission_classes = [IsAuthenticated]
