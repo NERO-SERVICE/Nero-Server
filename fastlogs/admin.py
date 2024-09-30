@@ -1,6 +1,7 @@
 from django.contrib import admin
-from .models import DailyLog
+from fastlogs.models import DailyLog
 
+# 빠른메모 관리
 @admin.register(DailyLog)
 class DailyLogAdmin(admin.ModelAdmin):
     list_display = ('owner', 'date', 'content')
