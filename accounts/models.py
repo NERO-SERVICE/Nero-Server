@@ -1,9 +1,9 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils import timezone
 from django.db.models import JSONField
 
-class SoftDeleteManager(models.Manager):
+class SoftDeleteManager(UserManager):
     def get_queryset(self):
         return super().get_queryset().filter(deleted_at__isnull=True)
 
@@ -37,4 +37,3 @@ class Memories(models.Model):
     def soft_delete(self):
         self.deleted_at = timezone.now()
         self.save()
-
