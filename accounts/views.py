@@ -55,7 +55,7 @@ def kakao_auth(request):
                 'username': unique_username,
                 'nickname': None,
                 'email': None,
-                'birth': None, 
+                'birth': None,
                 'sex': None,
             }
         )
@@ -73,13 +73,12 @@ def kakao_auth(request):
 
         return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
 
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         return JsonResponse({'error': 'Failed to retrieve user info from Kakao'}, status=500, json_dumps_params={'ensure_ascii': False})
-    except IntegrityError as e:
+    except IntegrityError:
         return JsonResponse({'error': 'Username already exists'}, status=400, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -134,25 +133,23 @@ def delete_account(request):
     try:
         user = request.user
         user.soft_delete()  # Soft delete
-
-        # 탈퇴한 유저의 토큰을 무효화합니다.
+        
         token = request.auth  # 현재 인증된 JWT 토큰 가져오기
         if token:
             try:
-                # 토큰이 이미 무효화되어 있을 경우 예외 처리
+                # 이미 블랙리스트에 있는지 확인
                 if not BlacklistedToken.objects.filter(token=token).exists():
                     BlacklistedToken.objects.create(token=token)
             except Exception as e:
-                # 토큰 블랙리스트 오류가 발생해도 탈퇴 처리에는 영향을 주지 않도록 합니다.
                 print(f"Token blacklisting failed: {e}")
 
-        # Soft delete 시점 반환
         return Response({
             'message': 'Account soft deleted successfully',
             'deletedAt': user.deleted_at
         }, status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+        return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR, json_dumps_params={'ensure_ascii': False})
+
 
 
 class MemoriesView(APIView):
