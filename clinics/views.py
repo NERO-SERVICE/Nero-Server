@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from .models import Clinics, Drug, DrugArchive, MyDrugArchive
+from mypage.models import YearlyDoseLog
 from .serializers import ClinicsSerializer, DrugSerializer, DrugArchiveSerializer
 from django.utils import timezone
 from django.db import transaction
@@ -100,6 +101,7 @@ class ListClinicsView(APIView):
 class ConsumeSelectedDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
         drug_ids = request.data.get('drug_ids', [])
         if not drug_ids:
@@ -107,16 +109,13 @@ class ConsumeSelectedDrugsView(APIView):
         
         now = timezone.now()
         korea_time = now.astimezone(pytz_timezone('Asia/Seoul'))  # 한국 시간으로 변환
-        today_start = korea_time.replace(hour=0, minute=0, second=0, microsecond=0)
-        tomorrow_start = today_start + timezone.timedelta(days=1)
+        today_date = korea_time.date()
         
-        if korea_time >= tomorrow_start:
-            drugs_to_reset = Drug.objects.filter(clinic__owner=request.user, allow=False)
-            for drug in drugs_to_reset:
-                drug.reset_allow()
+        # 오늘 복용해야 하는 모든 약물
+        today_drugs = Drug.objects.filter(clinic__owner=request.user, allow=True, clinic__recentDay__date=today_date)
         
+        # 오늘 복용한 약물을 처리
         consumed_drugs = []
-
         for drug_id in drug_ids:
             drug = get_object_or_404(Drug, drugId=drug_id, clinic__owner=request.user)
             
@@ -141,8 +140,15 @@ class ConsumeSelectedDrugsView(APIView):
             except ValueError as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
+        # 오늘 복용해야 하는 모든 약물이 allow=False 상태인지 확인하고 기록
+        if Drug.objects.filter(clinic__owner=request.user, clinic__recentDay__date=today_date, allow=True).count() == 0:
+            YearlyDoseLog.objects.get_or_create(
+                owner=request.user,
+                date=today_date,
+                defaults={'doseAction': True}
+            )
 
+        return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
 
 class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
