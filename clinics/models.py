@@ -28,7 +28,7 @@ class Clinics(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     recentDay = models.DateTimeField()
     nextDay = models.DateTimeField()
-    createdAt = models.DateTimeField()
+    createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
     description = models.TextField(null=True, blank=True)
 

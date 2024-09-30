@@ -23,24 +23,24 @@ class DrugSerializer(serializers.ModelSerializer):
 
 
 class ClinicsSerializer(serializers.ModelSerializer):
-    drugs = DrugSerializer(many=True)
+    drugs = DrugSerializer(many=True, write_only=True)
     nickname = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Clinics
         fields = ['clinicId', 'owner', 'nickname', 'recentDay', 'nextDay', 'createdAt', 'updatedAt', 'description', 'drugs']
         read_only_fields = ['clinicId', 'owner', 'createdAt', 'updatedAt']
-    
+
     def get_nickname(self, obj):
         return obj.owner.nickname
-    
+
     def create(self, validated_data):
         drugs_data = validated_data.pop('drugs')
         clinic = Clinics.objects.create(owner=self.context['request'].user, **validated_data)
-    
+
         for drug_data in drugs_data:
             my_drug_archive_data = drug_data.pop('myDrugArchive')
-    
+
             # MyDrugArchive 객체 생성
             my_drug_archive = MyDrugArchive.objects.create(
                 owner=clinic.owner,
@@ -49,7 +49,7 @@ class ClinicsSerializer(serializers.ModelSerializer):
                 target=my_drug_archive_data.get('target', ''),
                 capacity=my_drug_archive_data.get('capacity', '')
             )
-    
+
             # Drug 객체 생성
             Drug.objects.create(
                 clinic=clinic,
@@ -59,5 +59,35 @@ class ClinicsSerializer(serializers.ModelSerializer):
                 time=drug_data.get('time', '아침'),
                 allow=drug_data.get('allow', True)
             )
-    
+
         return clinic
+
+    def update(self, instance, validated_data):
+        drugs_data = validated_data.pop('drugs', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        if drugs_data is not None:
+            # 기존 약물 삭제 후 새롭게 추가
+            Drug.objects.filter(clinic=instance).delete()
+            for drug_data in drugs_data:
+                my_drug_archive_data = drug_data.pop('myDrugArchive')
+                my_drug_archive, created = MyDrugArchive.objects.get_or_create(
+                    owner=instance.owner,
+                    archiveId=my_drug_archive_data['archiveId'],
+                    defaults={
+                        'drugName': my_drug_archive_data.get('drugName', ''),
+                        'target': my_drug_archive_data.get('target', ''),
+                        'capacity': my_drug_archive_data.get('capacity', ''),
+                    }
+                )
+                Drug.objects.create(
+                    clinic=instance,
+                    myDrugArchive=my_drug_archive,
+                    number=drug_data.get('number', 0),
+                    initialNumber=drug_data.get('initialNumber', 0),
+                    time=drug_data.get('time', '아침'),
+                    allow=drug_data.get('allow', True)
+                )
+        return instance

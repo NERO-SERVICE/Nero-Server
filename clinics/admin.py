@@ -7,6 +7,7 @@ class ClinicsAdmin(admin.ModelAdmin):
     search_fields = ['description', 'owner__username']
     list_filter = ['createdAt', 'updatedAt', 'owner']
 
+
 @admin.register(Drug)
 class DrugAdmin(admin.ModelAdmin):
     list_display = ['drugId', 'clinic', 'display_my_drug_archive_name', 'display_target', 'number', 'time', 'allow']
@@ -22,11 +23,13 @@ class DrugAdmin(admin.ModelAdmin):
     display_my_drug_archive_name.short_description = 'Drug Name'
     display_target.short_description = 'Target'
 
+
 @admin.register(DrugArchive)
 class DrugArchiveAdmin(admin.ModelAdmin):
     list_display = ['archiveId', 'drugName', 'target', 'capacity']
     search_fields = ['drugName', 'target', 'capacity']
     list_filter = ['target']
+
 
 @admin.register(MyDrugArchive)
 class MyDrugArchiveAdmin(admin.ModelAdmin):
