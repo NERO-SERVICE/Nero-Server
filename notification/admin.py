@@ -25,11 +25,6 @@ class NotificationAdmin(admin.ModelAdmin):
             'fields': ('createdAt', 'updatedAt')
         }),
     )
-    
-    class Meta:
-        app_label = "유저관리"
-        verbose_name = "공지"
-        verbose_name_plural = "공지"
 
 
 admin.site.register(Notification, NotificationAdmin)

@@ -28,10 +28,6 @@ class UserAdmin(admin.ModelAdmin):
             return self.readonly_fields + ['nickname', 'email', 'sex', 'birth']
         return self.readonly_fields
     
-    class Meta:
-        app_label = "유저관리"
-        verbose_name = "유저관리"
-        verbose_name_plural = "유저관리"
 
 @admin.register(Memories)
 class MemoriesAdmin(admin.ModelAdmin):
@@ -43,8 +39,3 @@ class MemoriesAdmin(admin.ModelAdmin):
         return obj.userId.nickname
     
     get_user_nickname.short_description = 'User Nickname'
-    
-    class Meta:
-        app_label = "유저관리"
-        verbose_name = "챙길거리"
-        verbose_name_plural = "챙길거리"

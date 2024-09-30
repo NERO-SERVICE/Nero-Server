@@ -17,7 +17,9 @@ class Notification(models.Model):
         return self.title
     
     class Meta:
-        ordering = ['-updatedAt'] 
+        ordering = ['-updatedAt']
+        verbose_name = "공지"
+        verbose_name_plural = "공지"
 
 
 class ImageFile(models.Model):

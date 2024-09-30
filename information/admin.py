@@ -24,11 +24,6 @@ class InformationAdmin(admin.ModelAdmin):
             'fields': ('createdAt', 'updatedAt')
         }),
     )
-    
-    class Meta:
-        app_label = "유저관리"
-        verbose_name = "개발자 공지"
-        verbose_name_plural = "개발자 공지"
 
 admin.site.register(Information, InformationAdmin)
 admin.site.register(InformationImageFile)

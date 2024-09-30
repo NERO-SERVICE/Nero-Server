@@ -18,6 +18,8 @@ class Information(models.Model):
 
     class Meta:
         ordering = ['-updatedAt']
+        verbose_name = "개발자 공지"
+        verbose_name_plural = "개발자 공지"
 
 
 class InformationImageFile(models.Model):

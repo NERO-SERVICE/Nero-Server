@@ -18,7 +18,8 @@ class Magazine(models.Model):
 
     class Meta:
         ordering = ['-updatedAt']
-
+        verbose_name = "매거진"
+        verbose_name_plural = "매거진"
 
 class MagazineImageFile(models.Model):
     magazine = models.ForeignKey(Magazine, related_name='imageFiles', on_delete=models.CASCADE)
