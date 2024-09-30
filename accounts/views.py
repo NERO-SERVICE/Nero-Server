@@ -14,6 +14,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+from django.db import transaction
 
 User = get_user_model()
 
@@ -49,27 +50,33 @@ def kakao_auth(request):
             kakaoNickname = f'kakao_{kakaoId}'
 
         unique_username = kakaoNickname
-        user, created = User.all_objects.get_or_create(
-            kakaoId=kakaoId,
-            defaults={
-                'username': unique_username,
-                'nickname': None,
-                'email': None,
-                'birth': None,
-                'sex': None,
-            }
-        )
 
-        if created or user.deleted_at is not None:
-            user.deleted_at = None
-            user.set_unusable_password()
-            user.save()
+        with transaction.atomic():  # 트랜잭션 시작
+            user, created = User.all_objects.get_or_create(
+                kakaoId=kakaoId,
+                defaults={
+                    'username': unique_username,
+                    'nickname': None,
+                    'email': None,
+                    'birth': None,
+                    'sex': None,
+                }
+            )
 
-        needs_signup = False
-        if created or not user.nickname:
-            needs_signup = True
+            if created or user.deleted_at is not None:
+                user.deleted_at = None
+                user.set_unusable_password()
+                user.save()
 
-        tokens = get_tokens_for_user(user)
+            if created:
+                # 새로 생성된 사용자라면 빈 Memories 객체 생성
+                Memories.objects.create(userId=user, items=[])
+
+            needs_signup = False
+            if created or not user.nickname:
+                needs_signup = True
+
+            tokens = get_tokens_for_user(user)
 
         return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
 
@@ -79,6 +86,7 @@ def kakao_auth(request):
         return JsonResponse({'error': 'Username already exists'}, status=400, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
