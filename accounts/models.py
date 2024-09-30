@@ -27,7 +27,7 @@ class User(AbstractUser):
 
 class Memories(models.Model):
     memoryId = models.AutoField(primary_key=True)
-    userId = models.ForeignKey(User, on_delete=models.CASCADE)
+    userId = models.OneToOneField(User, on_delete=models.CASCADE, related_name='memories')
     items = JSONField(blank=True, default=list)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
@@ -37,3 +37,4 @@ class Memories(models.Model):
     def soft_delete(self):
         self.deleted_at = timezone.now()
         self.save()
+
