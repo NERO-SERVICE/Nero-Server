@@ -6,7 +6,7 @@ from django.utils import timezone
 class UserAdmin(admin.ModelAdmin):
     list_display = ['id', 'kakaoId', 'nickname', 'email', 'createdAt', 'birth', 'sex', 'is_product_writer', 'deleted_at']
     search_fields = ['nickname', 'email']
-    readonly_fields = ['id', 'createdAt', 'updatedAt']
+    readonly_fields = ['id', 'createdAt']
     list_filter = ['deleted_at', 'is_product_writer']
     actions = ['soft_delete_users', 'restore_users']
     
