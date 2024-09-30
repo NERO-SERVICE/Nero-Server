@@ -1,31 +1,36 @@
-# from django.contrib import admin
-# from .models import Notification, ImageFile
+from django.contrib import admin
+from .models import Notification, ImageFile
 
-# class ImageFileInline(admin.TabularInline):
-#     model = ImageFile
-#     extra = 5
-#     fields = ['file', 'uploaded_at']
-#     readonly_fields = ['uploaded_at']
-
-
-# class NotificationAdmin(admin.ModelAdmin):
-#     inlines = [ImageFileInline]
-#     list_display = ('noticeId', 'title', 'writer', 'createdAt', 'updatedAt')
-#     search_fields = ('title', 'description', 'writer__nickname') 
-#     readonly_fields = ('createdAt', 'updatedAt')
-
-#     fieldsets = (
-#         ('Basic Information', {
-#             'fields': ('title', 'description')
-#         }),
-#         ('Writer Information', {
-#             'fields': ('writer',)
-#         }),
-#         ('Additional Information', {
-#             'fields': ('createdAt', 'updatedAt')
-#         }),
-#     )
+class ImageFileInline(admin.TabularInline):
+    model = ImageFile
+    extra = 5
+    fields = ['file', 'uploaded_at']
+    readonly_fields = ['uploaded_at']
 
 
-# admin.site.register(Notification, NotificationAdmin)
-# admin.site.register(ImageFile)
+class NotificationAdmin(admin.ModelAdmin):
+    inlines = [ImageFileInline]
+    list_display = ('noticeId', 'title', 'writer', 'createdAt', 'updatedAt')
+    search_fields = ('title', 'description', 'writer__nickname') 
+    readonly_fields = ('createdAt', 'updatedAt')
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('title', 'description')
+        }),
+        ('Writer Information', {
+            'fields': ('writer',)
+        }),
+        ('Additional Information', {
+            'fields': ('createdAt', 'updatedAt')
+        }),
+    )
+    
+    class Meta:
+        app_label = "유저관리"
+        verbose_name = "공지"
+        verbose_name_plural = "공지"
+
+
+admin.site.register(Notification, NotificationAdmin)
+admin.site.register(ImageFile)
