@@ -68,8 +68,10 @@ def kakao_auth(request):
                 user.set_unusable_password()
                 user.save()
 
-            if created:
-                # 새로 생성된 사용자라면 빈 Memories 객체 생성
+                # 기존 Memories 객체 삭제 (소프트 삭제 포함)
+                Memories.all_objects.filter(userId=user).delete()
+
+                # 새로운 빈 Memories 객체 생성
                 Memories.objects.create(userId=user, items=[])
 
             needs_signup = False
