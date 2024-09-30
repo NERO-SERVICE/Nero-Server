@@ -8,6 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['userId', 'kakaoId', 'createdAt', 'nickname', 'email', 'birth', 'sex', 'deletedAt']
+        read_only_fields = ['userId', 'deletedAt']
 
 class MemoriesSerializer(serializers.ModelSerializer):
     deletedAt = serializers.DateTimeField(source='deleted_at', read_only=True)
