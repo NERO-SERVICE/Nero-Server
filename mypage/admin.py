@@ -2,18 +2,31 @@ from django.contrib import admin
 from mypage.models import YearlyDoseLog, YearlySideEffectLog
 from menstruation.models import Menstruation
 
-# 마이페이지 관리
 @admin.register(YearlyDoseLog)
 class YearlyDoseLogAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['owner', 'date', 'doseAction']
+
+    class Meta:
+        app_label = "마이페이지"
+        verbose_name = "연간관리 - 약복용"
+        verbose_name_plural = "연간관리 - 약복용"
+
 
 @admin.register(YearlySideEffectLog)
 class YearlySideEffectLogAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['owner', 'date', 'sideEffectAction']
+
+    class Meta:
+        app_label = "마이페이지"
+        verbose_name = "연간관리 - 부작용"
+        verbose_name_plural = "연간관리 - 부작용"
 
 
-# 생리주기 관리
 @admin.register(Menstruation)
 class MenstruationAdmin(admin.ModelAdmin):
-    list_display = ('owner', 'startDate', 'endDate', 'cycleLength')
-    search_fields = ('owner__username',)
+    list_display = ['owner', 'startDate', 'endDate', 'cycleLength']
+
+    class Meta:
+        app_label = "마이페이지"
+        verbose_name = "생리주기"
+        verbose_name_plural = "생리주기"

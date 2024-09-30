@@ -1,36 +1,24 @@
 from django.contrib import admin
-from todaylogs.models import Today, SurveyResponse, SideEffectResponse, SelfRecord, Question
+from todaylogs.models import Today
 from clinics.models import Clinics
 
-# 하루기록 관리
+# 하루기록
 @admin.register(Today)
 class TodayAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['owner', 'date', 'content']
 
-@admin.register(SurveyResponse)
-class SurveyResponseAdmin(admin.ModelAdmin):
-    list_display = ['today', 'question', 'answer']
-    search_fields = ['today__created_at', 'question__question_text', 'answer']
-
-@admin.register(SideEffectResponse)
-class SideEffectResponseAdmin(admin.ModelAdmin):
-    list_display = ['today', 'question', 'answer']
-    search_fields = ['today__created_at', 'question__question_text', 'answer']
-
-@admin.register(SelfRecord)
-class SelfRecordAdmin(admin.ModelAdmin):
-    list_display = ['today', 'created_at', 'content']
-    search_fields = ['today__created_at', 'content']
-
-@admin.register(Question)
-class QuestionAdmin(admin.ModelAdmin):
-    list_display = ['question_text', 'question_type']
-    search_fields = ['question_text', 'question_type']
+    class Meta:
+        app_label = "하루기록"
+        verbose_name = "하루기록"
+        verbose_name_plural = "하루기록"
 
 
-# 진료기록 관리
+# 진료기록
 @admin.register(Clinics)
 class ClinicsAdmin(admin.ModelAdmin):
-    list_display = ['clinicId', 'owner', 'recentDay', 'description', 'createdAt', 'updatedAt']
-    search_fields = ['description', 'owner__username']
-    list_filter = ['createdAt', 'updatedAt', 'owner']
+    list_display = ['clinicId', 'owner', 'recentDay', 'description']
+
+    class Meta:
+        app_label = "하루기록"
+        verbose_name = "진료기록"
+        verbose_name_plural = "진료기록"
