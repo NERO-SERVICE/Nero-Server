@@ -1,9 +1,11 @@
 from django.contrib import admin
-from fastlogs.models import DailyLog
+from .models import DailyLog
 
 @admin.register(DailyLog)
 class DailyLogAdmin(admin.ModelAdmin):
-    list_display = ['owner', 'date', 'content']
+    list_display = ('owner', 'date', 'content')
+    list_filter = ('owner', 'date')
+    search_fields = ('content',)
 
     class Meta:
         app_label = "빠른메모"
