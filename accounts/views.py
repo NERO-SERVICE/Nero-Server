@@ -143,10 +143,7 @@ def delete_account(request):
             except Exception as e:
                 print(f"Token blacklisting failed: {e}")
 
-        return Response({
-            'message': 'Account soft deleted successfully',
-            'deletedAt': user.deleted_at
-        }, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR, json_dumps_params={'ensure_ascii': False})
 
