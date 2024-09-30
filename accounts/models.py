@@ -24,6 +24,10 @@ class User(AbstractUser):
     def soft_delete(self):
         self.deleted_at = timezone.now()
         self.save()
+        
+    class Meta:
+        verbose_name = "유저관리"
+        verbose_name_plural = "유저관리"
 
 class Memories(models.Model):
     memoryId = models.AutoField(primary_key=True)
@@ -37,3 +41,7 @@ class Memories(models.Model):
     def soft_delete(self):
         self.deleted_at = timezone.now()
         self.save()
+    
+    class Meta:
+        verbose_name = "챙길거리"
+        verbose_name_plural = "챙길거리"

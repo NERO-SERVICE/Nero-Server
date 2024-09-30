@@ -15,3 +15,7 @@ class Menstruation(models.Model):
 
     def __str__(self):
         return f"{self.owner.username}의 생리 주기 ({self.startDate} - {self.endDate})"
+    
+    class Meta:
+        verbose_name = "생리주기"
+        verbose_name_plural = "생리주기"

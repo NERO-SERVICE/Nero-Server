@@ -6,17 +6,7 @@ from menstruation.models import Menstruation
 class YearlyDoseLogAdmin(admin.ModelAdmin):
     list_display = ['owner', 'date', 'doseAction']
 
-    class Meta:
-        app_label = "마이페이지"
-        verbose_name = "연간관리 - 약복용"
-        verbose_name_plural = "연간관리 - 약복용"
-
 
 @admin.register(YearlySideEffectLog)
 class YearlySideEffectLogAdmin(admin.ModelAdmin):
     list_display = ['owner', 'date', 'sideEffectAction']
-
-    class Meta:
-        app_label = "마이페이지"
-        verbose_name = "연간관리 - 부작용"
-        verbose_name_plural = "연간관리 - 부작용"

@@ -8,3 +8,7 @@ class Mail(models.Model):
 
     def __str__(self):
         return f"Mail from {self.owner.username} at {self.created_at}"
+    
+    class Meta:
+        verbose_name = "개발자 건의함"
+        verbose_name_plural = "개발자 건의함"

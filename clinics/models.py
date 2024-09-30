@@ -9,6 +9,10 @@ class DrugArchive(models.Model):
 
     def __str__(self):
         return self.drugName
+    
+    class Meta:
+        verbose_name = "서버 저장 약물 아카이브"
+        verbose_name_plural = "서버 저장 약물 아카이브"
 
 
 class MyDrugArchive(models.Model):
@@ -21,6 +25,10 @@ class MyDrugArchive(models.Model):
 
     def __str__(self):
         return f"{self.owner}'s selected {self.drugName}"
+    
+    class Meta:
+        verbose_name = "처방 개별 약"
+        verbose_name_plural = "처방 개별 약"
 
 
 class Clinics(models.Model):
@@ -37,6 +45,8 @@ class Clinics(models.Model):
 
     class Meta:
         ordering = ['-updatedAt']
+        verbose_name = "진료기록"
+        verbose_name_plural = "진료기록"
 
 
 class Drug(models.Model):
@@ -65,3 +75,7 @@ class Drug(models.Model):
     def reset_allow(self):
         self.allow = True
         self.save()
+        
+    class Meta:
+        verbose_name = "처방약물"
+        verbose_name_plural = "처방약물"

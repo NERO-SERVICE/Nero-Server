@@ -24,11 +24,6 @@ class MagazineAdmin(admin.ModelAdmin):
             'fields': ('createdAt', 'updatedAt')
         }),
     )
-    
-    class Meta:
-        app_label = "유저관리"
-        verbose_name = "매거진"
-        verbose_name_plural = "매거진"
 
 admin.site.register(Magazine, MagazineAdmin)
 admin.site.register(MagazineImageFile)

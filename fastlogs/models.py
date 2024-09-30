@@ -12,3 +12,5 @@ class DailyLog(models.Model):
 
     class Meta:
         ordering = ['-date']
+        verbose_name = "빠른메모"
+        verbose_name_plural = "빠른메모"

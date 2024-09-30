@@ -12,6 +12,10 @@ class Question(models.Model):
 
     def __str__(self):
         return self.question_text
+    
+    class Meta:
+        verbose_name = "질문모음"
+        verbose_name_plural = "질문모음"
 
 
 class Today(models.Model):
@@ -40,6 +44,10 @@ class SurveyResponse(models.Model):
     def __str__(self):
         formatted_date = self.created_at.strftime('%Y-%m-%d %H:%M')
         return f"Today Entry - {self.today.owner.nickname} - {formatted_date}"
+    
+    class Meta:
+        verbose_name = "하루설문"
+        verbose_name_plural = "하루설문"
 
 
 class SideEffectResponse(models.Model):
@@ -59,6 +67,10 @@ class SideEffectResponse(models.Model):
     def __str__(self):
         formatted_date = self.created_at.strftime('%Y-%m-%d %H:%M')
         return f"Side Effect Response - {self.question.question_text} : {self.answer} - {formatted_date}"
+    
+    class Meta:
+        verbose_name = "부작용설문"
+        verbose_name_plural = "부작용설문"
 
 
 class SelfRecord(models.Model):
@@ -68,3 +80,7 @@ class SelfRecord(models.Model):
 
     def __str__(self):
         return f"Self Record - {self.created_at}"
+    
+    class Meta:
+        verbose_name = "셀프기록"
+        verbose_name_plural = "셀프기록"
