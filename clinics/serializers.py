@@ -23,7 +23,7 @@ class DrugSerializer(serializers.ModelSerializer):
 
 
 class ClinicsSerializer(serializers.ModelSerializer):
-    drugs = DrugSerializer(many=True, write_only=True)
+    drugs = DrugSerializer(many=True, read_only=True)
     nickname = serializers.SerializerMethodField()
 
     class Meta:
@@ -35,7 +35,7 @@ class ClinicsSerializer(serializers.ModelSerializer):
         return obj.owner.nickname
 
     def create(self, validated_data):
-        drugs_data = validated_data.pop('drugs')
+        drugs_data = validated_data.pop('drugs', [])
         clinic = Clinics.objects.create(owner=self.context['request'].user, **validated_data)
 
         for drug_data in drugs_data:
