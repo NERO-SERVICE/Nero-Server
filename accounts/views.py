@@ -127,7 +127,6 @@ def update_user_info(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
 def delete_account(request):
     try:
