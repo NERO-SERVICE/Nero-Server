@@ -8,9 +8,22 @@ class TodaySerializer(serializers.ModelSerializer):
 
 
 class QuestionSubtypeSerializer(serializers.ModelSerializer):
+    is_completed = serializers.SerializerMethodField()
+
     class Meta:
         model = QuestionSubtype
-        fields = ['id', 'subtype_code', 'subtype_name']
+        fields = ['id', 'subtype_code', 'subtype_name', 'is_completed']
+
+    def get_is_completed(self, obj):
+        today = self.context.get('today')
+        response_type = self.context.get('response_type', 'survey')
+        if not today:
+            return False
+        return SurveyCompletion.objects.filter(
+            today=today,
+            response_type=response_type,
+            question_subtype=obj
+        ).exists()
 
 
 class AnswerChoiceSerializer(serializers.ModelSerializer):
