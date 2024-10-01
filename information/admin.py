@@ -3,7 +3,7 @@ from .models import Information, InformationImageFile
 
 class InformationImageFileInline(admin.TabularInline):
     model = InformationImageFile
-    extra = 5
+    extra = 1
     fields = ['file', 'uploaded_at']
     readonly_fields = ['uploaded_at']
 

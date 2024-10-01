@@ -1,27 +1,38 @@
 from rest_framework import serializers
 from .models import Clinics, Drug, DrugArchive, MyDrugArchive
 
-class MyDrugArchiveSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MyDrugArchive
-        fields = ['myArchiveId', 'archiveId', 'drugName', 'target', 'capacity']
-        read_only_fields = ['myArchiveId']
-
+# DrugArchiveSerializer: 약물 아카이브 정보를 시리얼라이즈
 class DrugArchiveSerializer(serializers.ModelSerializer):
     class Meta:
         model = DrugArchive
         fields = ['archiveId', 'drugName', 'target', 'capacity']
         read_only_fields = ['archiveId']
 
+
+# MyDrugArchiveSerializer: 개별 사용자의 약물 정보 시리얼라이즈
+class MyDrugArchiveSerializer(serializers.ModelSerializer):
+    archiveId = serializers.IntegerField(source='archive.archiveId', read_only=True)
+    drugName = serializers.CharField(source='archive.drugName', read_only=True)
+    target = serializers.CharField(source='archive.target', allow_null=True, read_only=True)
+    capacity = serializers.CharField(source='archive.capacity', allow_null=True, read_only=True)
+
+    class Meta:
+        model = MyDrugArchive
+        fields = ['myArchiveId', 'archiveId', 'drugName', 'target', 'capacity']
+        read_only_fields = ['myArchiveId']
+
+
+# DrugSerializer: 진료 기록에 연결된 약물 정보 시리얼라이즈
 class DrugSerializer(serializers.ModelSerializer):
     myDrugArchive = MyDrugArchiveSerializer()
-    
+
     class Meta:
         model = Drug
         fields = ['drugId', 'myDrugArchive', 'number', 'initialNumber', 'time', 'allow']
         read_only_fields = ['drugId']
 
 
+# ClinicsSerializer: 진료 기록을 시리얼라이즈
 class ClinicsSerializer(serializers.ModelSerializer):
     drugs = DrugSerializer(many=True, read_only=True)
     nickname = serializers.SerializerMethodField()
@@ -40,14 +51,12 @@ class ClinicsSerializer(serializers.ModelSerializer):
 
         for drug_data in drugs_data:
             my_drug_archive_data = drug_data.pop('myDrugArchive')
+            archive = DrugArchive.objects.get(archiveId=my_drug_archive_data['archiveId'])
 
-            # MyDrugArchive 객체 생성
-            my_drug_archive = MyDrugArchive.objects.create(
+            # MyDrugArchive 객체 생성 또는 가져오기
+            my_drug_archive, created = MyDrugArchive.objects.get_or_create(
                 owner=clinic.owner,
-                archiveId=my_drug_archive_data['archiveId'],
-                drugName=my_drug_archive_data['drugName'],
-                target=my_drug_archive_data.get('target', ''),
-                capacity=my_drug_archive_data.get('capacity', '')
+                archive=archive
             )
 
             # Drug 객체 생성
@@ -73,15 +82,15 @@ class ClinicsSerializer(serializers.ModelSerializer):
             Drug.objects.filter(clinic=instance).delete()
             for drug_data in drugs_data:
                 my_drug_archive_data = drug_data.pop('myDrugArchive')
+                archive = DrugArchive.objects.get(archiveId=my_drug_archive_data['archiveId'])
+
+                # MyDrugArchive 객체 생성 또는 가져오기
                 my_drug_archive, created = MyDrugArchive.objects.get_or_create(
                     owner=instance.owner,
-                    archiveId=my_drug_archive_data['archiveId'],
-                    defaults={
-                        'drugName': my_drug_archive_data.get('drugName', ''),
-                        'target': my_drug_archive_data.get('target', ''),
-                        'capacity': my_drug_archive_data.get('capacity', ''),
-                    }
+                    archive=archive
                 )
+
+                # Drug 객체 생성
                 Drug.objects.create(
                     clinic=instance,
                     myDrugArchive=my_drug_archive,

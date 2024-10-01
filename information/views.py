@@ -28,7 +28,7 @@ class RetrieveInformationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
-        information = get_object_or_404(Information, infoId=id)
+        information = get_object_or_404(Information.objects.prefetch_related('imageFiles'), infoId=id)
         serializer = InformationSerializer(information, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -36,7 +36,7 @@ class ListInformationView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        informationList = Information.objects.all()
+        informationList = Information.objects.prefetch_related('imageFiles').all()
         if not informationList.exists():
             return Response({'detail': 'No informations found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = InformationSerializer(informationList, many=True, context={'request': request})
@@ -46,10 +46,9 @@ class RecentInformationsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        recent_informations = Information.objects.all().order_by('-createdAt')[:4]
+        recent_informations = Information.objects.prefetch_related('imageFiles').all().order_by('-createdAt')[:4]
         if not recent_informations.exists():
             return Response({'detail': 'No recent informations found.'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = InformationSerializer(recent_informations, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-

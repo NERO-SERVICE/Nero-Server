@@ -12,13 +12,8 @@ class CreateNoticeView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
-        # 사용자가 로그인했는지 확인
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # 제품 작성 권한이 있는지 확인
         if not request.user.is_product_writer:
-            return Response({"detail": "You do not have permission to create a product."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "You do not have permission to create a notification."}, status=status.HTTP_403_FORBIDDEN)
         
         serializer = NotificationSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
@@ -33,11 +28,10 @@ class UpdateNoticeView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def put(self, request, id):
-        
         if not request.user.is_product_writer:
-            return Response({"detail": "You do not have permission to update a product."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "You do not have permission to update a notification."}, status=status.HTTP_403_FORBIDDEN)
 
-        notice = get_object_or_404(Notification, noticeId=id, writer=request.user)
+        notice = get_object_or_404(Notification, id=id, writer=request.user)
         serializer = NotificationSerializer(notice, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -50,7 +44,7 @@ class RetrieveNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
-        notice = get_object_or_404(Notification, noticeId=id)
+        notice = get_object_or_404(Notification, id=id)
         serializer = NotificationSerializer(notice, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -60,11 +54,10 @@ class DeleteNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, id):
-        # 제품 작성 권한이 있는지 확인
         if not request.user.is_product_writer:
-            return Response({"detail": "You do not have permission to delete a product."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"detail": "You do not have permission to delete a notification."}, status=status.HTTP_403_FORBIDDEN)
 
-        notice = get_object_or_404(Notification, noticeId=id, writer=request.user)
+        notice = get_object_or_404(Notification, id=id, writer=request.user)
         notice.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -74,11 +67,9 @@ class ListNoticeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # 모든 사용자의 제품을 조회
-        noticeList = Notification.objects.all()
-
-        if not noticeList.exists():
-            return Response({'detail': 'No products found.'}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = NotificationSerializer(noticeList, many=True, context={'request': request})
+        notice_list = Notification.objects.all()
+        if not notice_list.exists():
+            return Response({'detail': 'No notifications found.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = NotificationSerializer(notice_list, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)

@@ -3,7 +3,7 @@ from .models import Magazine, MagazineImageFile
 
 class MagazineImageFileInline(admin.TabularInline):
     model = MagazineImageFile
-    extra = 5
+    extra = 1
     fields = ['file', 'uploaded_at']
     readonly_fields = ['uploaded_at']
 

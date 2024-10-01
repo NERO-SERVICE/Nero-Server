@@ -33,17 +33,19 @@ class InformationSerializer(serializers.ModelSerializer):
         return obj.writer.nickname
 
     def create(self, validated_data):
-        image_files_data = self.initial_data.getlist('imageFiles')
+        image_files_data = self.context['request'].FILES.getlist('imageFiles')
         information = Information.objects.create(**validated_data)
-        for image_data in image_files_data:
-            InformationImageFile.objects.create(information=information, file=image_data)
+        self._save_image_files(information, image_files_data)
         return information
 
     def update(self, instance, validated_data):
-        image_files_data = validated_data.pop('imageFiles', None)
+        image_files_data = self.context['request'].FILES.getlist('imageFiles')
         information = super().update(instance, validated_data)
-        if image_files_data is not None:
+        if image_files_data:
             instance.imageFiles.all().delete()
-            for image_data in image_files_data:
-                InformationImageFile.objects.create(information=information, **image_data)
+            self._save_image_files(information, image_files_data)
         return information
+
+    def _save_image_files(self, information, image_files_data):
+        for image_data in image_files_data:
+            InformationImageFile.objects.create(information=information, file=image_data)

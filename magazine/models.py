@@ -21,6 +21,7 @@ class Magazine(models.Model):
         verbose_name = "매거진"
         verbose_name_plural = "매거진"
 
+
 class MagazineImageFile(models.Model):
     magazine = models.ForeignKey(Magazine, related_name='imageFiles', on_delete=models.CASCADE)
     file = models.ImageField(upload_to='magazine_images/')

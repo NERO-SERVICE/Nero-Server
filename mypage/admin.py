@@ -1,12 +1,8 @@
 from django.contrib import admin
-from mypage.models import YearlyDoseLog, YearlySideEffectLog
-from menstruation.models import Menstruation
+from mypage.models import YearlyLog
 
-@admin.register(YearlyDoseLog)
-class YearlyDoseLogAdmin(admin.ModelAdmin):
-    list_display = ['owner', 'date', 'doseAction']
-
-
-@admin.register(YearlySideEffectLog)
-class YearlySideEffectLogAdmin(admin.ModelAdmin):
-    list_display = ['owner', 'date', 'sideEffectAction']
+@admin.register(YearlyLog)
+class YearlyLogAdmin(admin.ModelAdmin):
+    list_display = ['owner', 'date', 'log_type', 'action']
+    list_filter = ['log_type', 'date']
+    search_fields = ['owner__username', 'log_type']

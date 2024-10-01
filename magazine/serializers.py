@@ -33,17 +33,19 @@ class MagazineSerializer(serializers.ModelSerializer):
         return obj.writer.nickname
 
     def create(self, validated_data):
-        image_files_data = self.initial_data.getlist('imageFiles')
+        image_files_data = self.context['request'].FILES.getlist('imageFiles')
         magazine = Magazine.objects.create(**validated_data)
-        for image_data in image_files_data:
-            MagazineImageFile.objects.create(magazine=magazine, file=image_data)
+        self._save_image_files(magazine, image_files_data)
         return magazine
 
     def update(self, instance, validated_data):
-        image_files_data = validated_data.pop('imageFiles', None)
+        image_files_data = self.context['request'].FILES.getlist('imageFiles')
         magazine = super().update(instance, validated_data)
-        if image_files_data is not None:
+        if image_files_data:
             instance.imageFiles.all().delete()
-            for image_data in image_files_data:
-                MagazineImageFile.objects.create(magazine=magazine, **image_data)
+            self._save_image_files(magazine, image_files_data)
         return magazine
+
+    def _save_image_files(self, magazine, image_files_data):
+        for image_data in image_files_data:
+            MagazineImageFile.objects.create(magazine=magazine, file=image_data)
