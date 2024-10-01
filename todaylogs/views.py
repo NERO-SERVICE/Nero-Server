@@ -3,7 +3,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Today, SelfRecord, Question, SurveyResponse, SideEffectResponse
+from .models import Today, SelfRecord, Question, SurveyResponse, SideEffectResponse, AnswerChoice
 from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, SurveyResponseSerializer, SideEffectResponseSerializer
 from django.db.models.functions import TruncDate
 
@@ -37,10 +37,10 @@ class QuestionListView(generics.ListAPIView):
         queryset = super().get_queryset()
         
         if question_type:
-            queryset = queryset.filter(question_type=question_type)
+            queryset = queryset.filter(question_type__type_code=question_type)
         
         if question_subtype:
-            queryset = queryset.filter(question_subtype=question_subtype)
+            queryset = queryset.filter(question_subtype__subtype_code=question_subtype)
         
         return queryset
 
@@ -55,11 +55,14 @@ class SurveyResponseCreateView(APIView):
         )
 
         question_id = request.data.get('question_id')
-        question = Question.objects.get(pk=question_id, question_type='survey')
+        answer_id = request.data.get('answer_id')
+
+        question = Question.objects.get(pk=question_id)
+        answer = AnswerChoice.objects.get(pk=answer_id, question_subtype=question.question_subtype)
 
         serializer = SurveyResponseSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(today=today, question=question)
+            serializer.save(today=today, question=question, answer=answer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
