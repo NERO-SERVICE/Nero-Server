@@ -2,9 +2,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import YearlyLog
+from rest_framework.permissions import IsAuthenticated
 import calendar
 
 class YearlyLogView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, year):
         user = request.user
         log_type = request.query_params.get('type', 'all')
@@ -18,8 +21,8 @@ class YearlyLogView(APIView):
 
         for month in range(1, 13):
             month_logs = yearly_logs.filter(date__month=month)
-            month_start_day, month_end_day = calendar.monthrange(year, month)
-            adjusted_month_start = (month_start_day + 1) % 7  # 일요일이 0
+            _, month_end_day = calendar.monthrange(year, month)
+            adjusted_month_start = (month_logs.first().date.weekday() + 1) % 7 if month_logs.exists() else 0  # 일요일이 0
 
             log_data = {
                 'doseCheck': {},
