@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Today, Response, SelfRecord, Question, AnswerChoice, QuestionSubtype
+from .models import Today, Response, SelfRecord, Question, AnswerChoice, QuestionSubtype, SurveyCompletion
 
 class TodaySerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,8 +32,8 @@ class QuestionSerializer(serializers.ModelSerializer):
             question_subtype=obj.question_subtype
         )
         return AnswerChoiceSerializer(answer_choices, many=True).data        
-        
-        
+
+
 class ResponseSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
     answer = AnswerChoiceSerializer(read_only=True)
@@ -49,10 +49,29 @@ class SelfRecordSerializer(serializers.ModelSerializer):
         fields = ['id', 'created_at', 'content']
 
 
+class SurveyCompletionSerializer(serializers.ModelSerializer):
+    question_subtype = QuestionSubtypeSerializer(read_only=True)
+
+    class Meta:
+        model = SurveyCompletion
+        fields = ['id', 'response_type', 'question_subtype', 'completed_at']
+
+
 class TodayDetailSerializer(serializers.ModelSerializer):
     responses = ResponseSerializer(many=True, read_only=True)
     self_records = SelfRecordSerializer(many=True, read_only=True)
+    survey_completions = SurveyCompletionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Today
-        fields = ['id', 'created_at', 'next_appointment_date', 'responses', 'self_records']
+        fields = ['id', 'created_at', 'next_appointment_date', 'responses', 'self_records', 'survey_completions']
+
+
+class TodayDetailSerializer(serializers.ModelSerializer):
+    responses = ResponseSerializer(many=True, read_only=True)
+    self_records = SelfRecordSerializer(many=True, read_only=True)
+    survey_completions = SurveyCompletionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Today
+        fields = ['id', 'created_at', 'next_appointment_date', 'responses', 'self_records', 'survey_completions']

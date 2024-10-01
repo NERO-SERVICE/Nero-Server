@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Today, SelfRecord, Question, QuestionType, QuestionSubtype, AnswerChoice, Response
+from .models import Today, SelfRecord, Question, QuestionType, QuestionSubtype, AnswerChoice, Response, SurveyCompletion
 
 @admin.register(Response)
 class ResponseAdmin(admin.ModelAdmin):
@@ -16,11 +16,17 @@ class SelfRecordAdmin(admin.ModelAdmin):
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ['question_text', 'question_type', 'question_subtype']
     search_fields = ['question_text', 'question_type__type_name', 'question_subtype__subtype_name']
-    
+
 @admin.register(AnswerChoice)
 class AnswerChoiceAdmin(admin.ModelAdmin):
     list_display = ['question_type', 'question_subtype', 'answer_code', 'answer_text']
     search_fields = ['question_subtype__subtype_name', 'answer_text']
+
+@admin.register(SurveyCompletion)
+class SurveyCompletionAdmin(admin.ModelAdmin):
+    list_display = ['today', 'response_type', 'question_subtype', 'completed_at']
+    search_fields = ['today__created_at', 'question_subtype__subtype_name', 'response_type']
+    list_filter = ['response_type', 'question_subtype']
 
 admin.site.register(Today)
 admin.site.register(QuestionType)
