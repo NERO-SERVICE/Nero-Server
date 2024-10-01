@@ -1,12 +1,8 @@
 from rest_framework import serializers
-from .models import YearlyDoseLog, YearlySideEffectLog
+from .models import YearlyLog
 
-class YearlyDoseLogSerializer(serializers.ModelSerializer):
+class YearlyLogSerializer(serializers.ModelSerializer):
     class Meta:
-        model = YearlyDoseLog
-        fields = ['owner', 'date', 'doseAction']
-
-class YearlySideEffectLogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = YearlySideEffectLog
-        fields = ['owner', 'date', 'sideEffectAction']
+        model = YearlyLog
+        fields = ['owner', 'date', 'log_type', 'action']
+        read_only_fields = ['owner']

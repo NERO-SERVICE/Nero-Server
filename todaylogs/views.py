@@ -3,8 +3,8 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Today, SelfRecord, Question, SurveyResponse, SideEffectResponse, AnswerChoice
-from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, SurveyResponseSerializer, SideEffectResponseSerializer
+from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer
 from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -44,7 +44,7 @@ class QuestionListView(generics.ListAPIView):
         
         return queryset
 
-class SurveyResponseCreateView(APIView):
+class ResponseCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -56,32 +56,17 @@ class SurveyResponseCreateView(APIView):
 
         question_id = request.data.get('question_id')
         answer_id = request.data.get('answer_id')
+        response_type = request.data.get('response_type')  # 'survey' 또는 'side_effect'로 구분
+
+        if response_type not in ['survey', 'side_effect']:
+            return Response({"error": "Invalid response type."}, status=status.HTTP_400_BAD_REQUEST)
 
         question = Question.objects.get(pk=question_id)
         answer = AnswerChoice.objects.get(pk=answer_id, question_subtype=question.question_subtype)
 
-        serializer = SurveyResponseSerializer(data=request.data)
+        serializer = ResponseSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(today=today, question=question, answer=answer)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-class SideEffectResponseCreateView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        today, created = Today.objects.get_or_create(
-            owner=request.user,
-            created_at__date=timezone.now().date(),
-            defaults={'next_appointment_date': None}
-        )
-        
-        question_id = request.data.get('question_id')
-        question = Question.objects.get(pk=question_id, question_type='side_effect')
-
-        serializer = SideEffectResponseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(today=today, question=question)
+            serializer.save(today=today, question=question, answer=answer, response_type=response_type)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -111,40 +96,28 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
         )
         serializer.save(today=today)
 
-class SurveyResponseListView(generics.ListAPIView):
-    serializer_class = SurveyResponseSerializer
+class ResponseListView(generics.ListAPIView):
+    serializer_class = ResponseSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         year = self.request.query_params.get('year')
         month = self.request.query_params.get('month')
         day = self.request.query_params.get('day')
+        response_type = self.request.query_params.get('response_type', 'all')  # 'survey', 'side_effect', 또는 'all'
 
-        queryset = SurveyResponse.objects.filter(
+        queryset = UserResponse.objects.filter(
             today__owner=self.request.user,
             today__created_at__year=year,
             today__created_at__month=month,
             today__created_at__day=day
         )
+
+        if response_type in ['survey', 'side_effect']:
+            queryset = queryset.filter(response_type=response_type)
+
         return queryset
 
-class SideEffectResponseListView(generics.ListAPIView):
-    serializer_class = SideEffectResponseSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        year = self.request.query_params.get('year')
-        month = self.request.query_params.get('month')
-        day = self.request.query_params.get('day')
-
-        queryset = SideEffectResponse.objects.filter(
-            today__owner=self.request.user,
-            today__created_at__year=year,
-            today__created_at__month=month,
-            today__created_at__day=day
-        )
-        return queryset
-    
 class SelfRecordResponseListView(generics.ListAPIView):
     serializer_class = SelfRecordSerializer
     permission_classes = [IsAuthenticated]
@@ -161,39 +134,29 @@ class SelfRecordResponseListView(generics.ListAPIView):
             created_at__day=day
         )
         
-class SurveyRecordedDatesView(APIView):
+class RecordedDatesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         year = request.query_params.get('year')
         if not year:
             return Response({"error": "Year parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        response_type = request.query_params.get('response_type', 'all')  # 'survey', 'side_effect', 또는 'all'
 
-        dates = SurveyResponse.objects.filter(
+        queryset = UserResponse.objects.filter(
             today__owner=request.user,
             today__created_at__year=year
-        ).annotate(date=TruncDate('today__created_at')).values_list('date', flat=True).distinct()
+        )
 
+        if response_type in ['survey', 'side_effect']:
+            queryset = queryset.filter(response_type=response_type)
+
+        dates = queryset.annotate(date=TruncDate('today__created_at')).values_list('date', flat=True).distinct()
         date_strings = [date.isoformat() for date in dates]
 
         return Response(date_strings)
 
-class SideEffectRecordedDatesView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        year = request.query_params.get('year')
-        if not year:
-            return Response({"error": "Year parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-        dates = SideEffectResponse.objects.filter(
-            today__owner=request.user,
-            today__created_at__year=year
-        ).annotate(date=TruncDate('today__created_at')).values_list('date', flat=True).distinct()
-
-        date_strings = [date.isoformat() for date in dates]
-
-        return Response(date_strings)
 
 class SelfRecordRecordedDatesView(APIView):
     permission_classes = [IsAuthenticated]

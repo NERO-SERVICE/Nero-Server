@@ -7,49 +7,49 @@ class ImageFileSerializer(serializers.ModelSerializer):
         fields = ['file']
 
 class NotificationSerializer(serializers.ModelSerializer):
-    imageUrls = serializers.SerializerMethodField()
+    image_urls = serializers.SerializerMethodField()
     nickname = serializers.SerializerMethodField()
-    imageFiles = ImageFileSerializer(many=True, write_only=True, required=False)
+    image_files = ImageFileSerializer(many=True, write_only=True, required=False)
 
     class Meta:
         model = Notification
         fields = [
-            'noticeId',
+            'id',
             'title',
             'description',
-            'imageUrls',
-            'imageFiles',
+            'image_urls',
+            'image_files',
             'writer',
             'nickname',
-            'createdAt',
-            'updatedAt',
+            'created_at',
+            'updated_at',
         ]
+        read_only_fields = ['id', 'writer', 'created_at', 'updated_at']
 
-    def get_imageUrls(self, obj):
+    def get_image_urls(self, obj):
         request = self.context.get('request')
-        return [request.build_absolute_uri(image.file.url) for image in obj.imageFiles.all()]
+        return [request.build_absolute_uri(image.file.url) for image in obj.image_files.all()]
 
     def get_nickname(self, obj):
         return obj.writer.nickname
 
     def create(self, validated_data):
         image_files_data = self.initial_data.getlist('imageFiles')
-        
-        notice = Notification.objects.create(**validated_data)
+        notification = Notification.objects.create(**validated_data)
         
         for image_data in image_files_data:
-            ImageFile.objects.create(notice=notice, file=image_data)
+            ImageFile.objects.create(notification=notification, file=image_data)
 
-        return notice
+        return notification
 
     def update(self, instance, validated_data):
-        image_files_data = validated_data.pop('imageFiles', None)
+        image_files_data = validated_data.pop('image_files', None)
         
-        notice = super().update(instance, validated_data)
+        notification = super().update(instance, validated_data)
 
         if image_files_data is not None:
-            instance.imageFiles.all().delete() 
+            instance.image_files.all().delete()
             for image_data in image_files_data:
-                ImageFile.objects.create(notice=notice, **image_data)
+                ImageFile.objects.create(notification=notification, **image_data)
 
-        return notice
+        return notification

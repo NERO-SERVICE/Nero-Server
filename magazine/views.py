@@ -42,7 +42,7 @@ class RetrieveMagazineView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, id):
-        magazine = get_object_or_404(Magazine, magazineId=id)
+        magazine = get_object_or_404(Magazine.objects.prefetch_related('imageFiles'), magazineId=id)
         serializer = MagazineSerializer(magazine, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -60,7 +60,7 @@ class ListMagazineView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        magazineList = Magazine.objects.all()
+        magazineList = Magazine.objects.prefetch_related('imageFiles').all()
         if not magazineList.exists():
             return Response({'detail': 'No magazines found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = MagazineSerializer(magazineList, many=True, context={'request': request})
@@ -70,11 +70,9 @@ class RecentMagazinesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # 최신 3개의 매거진을 가져옴
-        recent_magazines = Magazine.objects.all().order_by('-createdAt')[:3]
+        recent_magazines = Magazine.objects.prefetch_related('imageFiles').all().order_by('-createdAt')[:3]
         if not recent_magazines.exists():
             return Response({'detail': 'No recent magazines found.'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = MagazineSerializer(recent_magazines, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-
