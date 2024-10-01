@@ -17,8 +17,8 @@ class SelfRecordAdmin(admin.ModelAdmin):
 
 
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ['question_text', 'question_type']
-    search_fields = ['question_text', 'question_type']
+    list_display = ['question_text', 'question_type', 'question_subtype']
+    search_fields = ['question_text', 'question_type', 'question_subtype']
 
 
 admin.site.register(Today)

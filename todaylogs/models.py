@@ -3,12 +3,18 @@ from django.conf import settings
 
 class Question(models.Model):
     QUESTION_TYPES = [
-        ('survey', 'Survey'),
-        ('side_effect', 'Side Effect'),
+        ('survey', '하루설문'),
+        ('side_effect', '부작용설문'),
+    ]
+    
+    QUESTION_SUBTYPES = [
+        ('depression', '우울'),
+        ('anxiety', '불안'),
     ]
     
     question_text = models.CharField(max_length=255)
     question_type = models.CharField(max_length=20, choices=QUESTION_TYPES)
+    question_subtype = models.CharField(max_length=20, choices=QUESTION_SUBTYPES)
 
     def __str__(self):
         return self.question_text
@@ -29,11 +35,10 @@ class Today(models.Model):
 
 class SurveyResponse(models.Model):
     TODAY_SURVEY_ANSWERS = [
-        ('1', '매우 나쁨'),
-        ('2', '나쁨'),
-        ('3', '보통'),
-        ('4', '좋음'),
-        ('5', '매우 좋음'),
+        ('0', '전혀'),
+        ('1', '며칠동안'),
+        ('2', '7일이상'),
+        ('3', '거의매일'),
     ]
 
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_responses')
