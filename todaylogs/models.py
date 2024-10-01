@@ -76,7 +76,7 @@ class Response(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.get_response_type_display()} Response - {self.question.question_text} - {self.answer}"
-        
+
 
 class SurveySession(models.Model):
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_sessions')
@@ -85,7 +85,7 @@ class SurveySession(models.Model):
 
     def __str__(self):
         return f"{self.response_type} session on {self.today.created_at.date()}"
-    
+
 
 class SelfRecord(AbstractBaseModel):
     today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='self_records')
@@ -97,3 +97,16 @@ class SelfRecord(AbstractBaseModel):
     class Meta:
         verbose_name = "셀프기록"
         verbose_name_plural = "셀프기록"
+
+
+class SurveyCompletion(models.Model):
+    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_completions')
+    response_type = models.CharField(max_length=20, choices=Response.RESPONSE_TYPE_CHOICES)
+    question_subtype = models.ForeignKey(QuestionSubtype, on_delete=models.CASCADE, related_name='survey_completions')
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('today', 'response_type', 'question_subtype')
+
+    def __str__(self):
+        return f"{self.response_type} completed for {self.question_subtype} on {self.today}"
