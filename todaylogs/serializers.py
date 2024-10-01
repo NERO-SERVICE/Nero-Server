@@ -7,6 +7,12 @@ class TodaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class QuestionSubtypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionSubtype
+        fields = ['id', 'subtype_code', 'subtype_name']
+
+
 class AnswerChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerChoice
@@ -25,14 +31,9 @@ class QuestionSerializer(serializers.ModelSerializer):
             question_type=obj.question_type,
             question_subtype=obj.question_subtype
         )
-        return AnswerChoiceSerializer(answer_choices, many=True).data
-    
-    
-class QuestionSubtypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = QuestionSubtype
-        fields = ['id', 'subtype_code', 'subtype_name']
-
+        return AnswerChoiceSerializer(answer_choices, many=True).data        
+        
+        
 class ResponseSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
     answer = AnswerChoiceSerializer(read_only=True)

@@ -54,21 +54,39 @@ class ResponseCreateView(APIView):
             defaults={'next_appointment_date': None}
         )
 
-        question_id = request.data.get('question_id')
-        answer_id = request.data.get('answer_id')
-        response_type = request.data.get('response_type')  # 'survey' 또는 'side_effect'로 구분
+        response_type = request.data.get('response_type')  # 'survey' 또는 'side_effect'
+        responses = request.data.get('responses')  # 응답 리스트
 
         if response_type not in ['survey', 'side_effect']:
             return Response({"error": "Invalid response type."}, status=status.HTTP_400_BAD_REQUEST)
 
-        question = Question.objects.get(pk=question_id)
-        answer = AnswerChoice.objects.get(pk=answer_id, question_subtype=question.question_subtype)
+        if not isinstance(responses, list):
+            return Response({"error": "Responses should be a list."}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = ResponseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(today=today, question=question, answer=answer, response_type=response_type)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        created_responses = []
+        for response_data in responses:
+            question_id = response_data.get('question_id')
+            answer_id = response_data.get('answer_id')
+
+            try:
+                question = Question.objects.get(pk=question_id)
+                answer = AnswerChoice.objects.get(pk=answer_id, question_subtype=question.question_subtype)
+            except Question.DoesNotExist:
+                return Response({"error": f"Question with id {question_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+            except AnswerChoice.DoesNotExist:
+                return Response({"error": f"AnswerChoice with id {answer_id} does not exist for the question's subtype."}, status=status.HTTP_400_BAD_REQUEST)
+
+            response_instance = UserResponse(
+                today=today,
+                question=question,
+                answer=answer,
+                response_type=response_type
+            )
+            response_instance.save()
+            created_responses.append(response_instance)
+
+        serializer = ResponseSerializer(created_responses, many=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class SelfRecordListCreateView(generics.ListCreateAPIView):
     serializer_class = SelfRecordSerializer
