@@ -106,27 +106,29 @@ class ConsumeSelectedDrugsView(APIView):
         drug_ids = request.data.get('drug_ids', [])
         if not drug_ids:
             return Response({'error': 'No drug IDs provided.'}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         now = timezone.now()
         korea_time = now.astimezone(pytz_timezone('Asia/Seoul'))  # 한국 시간으로 변환
         today_date = korea_time.date()
-
+        
         # 오늘 복용해야 하는 모든 약물
-        today_drugs = Drug.objects.filter(clinic__owner=request.user, allow=True, clinic__recentDay__date=today_date)
-
+        today_drugs = Drug.objects.filter(
+            clinic__owner=request.user, 
+            allow=True, 
+            clinic__recentDay__date=today_date
+        )
+        
         # 오늘 복용한 약물을 처리
         consumed_drugs = []
         for drug_id in drug_ids:
             drug = get_object_or_404(Drug, drugId=drug_id, clinic__owner=request.user)
-
+            
             if drug.number == 0:
-                return Response({'error': f'Drug {drug.myDrugArchive.drugName} has run out and cannot be consumed.'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({'error': f'Drug {drug.myDrugArchive.drugName} has run out and cannot be consumed.'}, status=status.HTTP_400_BAD_REQUEST)
 
             if not drug.allow:
-                return Response({'error': f'Drug {drug.myDrugArchive.drugName} has already been consumed today.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-
+                return Response({'error': f'Drug {drug.myDrugArchive.drugName} has already been consumed today.'}, status=status.HTTP_400_BAD_REQUEST)
+            
             try:
                 drug.consume_one()
                 drug.allow = False
@@ -144,15 +146,15 @@ class ConsumeSelectedDrugsView(APIView):
 
         # 오늘 복용해야 하는 모든 약물이 allow=False 상태인지 확인하고 기록
         if Drug.objects.filter(clinic__owner=request.user, clinic__recentDay__date=today_date, allow=True).count() == 0:
-            YearlyLog.objects.get_or_create(  # 수정된 부분
+            YearlyLog.objects.get_or_create(
                 owner=request.user,
                 date=today_date,
-                log_type='dose',  # log_type 필드를 'dose'로 설정
+                log_type='dose',
                 defaults={'action': True}
             )
 
         return Response({'consumed_drugs': consumed_drugs}, status=status.HTTP_200_OK)
-    
+
 class ListDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -174,6 +176,7 @@ class ListDrugArchivesView(APIView):
 class RollbackConsumeDrugsView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @transaction.atomic
     def post(self, request):
         date_to_rollback = request.data.get('date', None)
         
@@ -208,5 +211,17 @@ class RollbackConsumeDrugsView(APIView):
                 drug.number += 1  # 이미 소비한 약물의 수량 복구
             drug.allow = True   # allow 상태를 롤백
             drug.save()
+
+        # YearlyLog 롤백 처리
+        try:
+            yearly_log = YearlyLog.objects.get(
+                owner=request.user,
+                date=rollback_date,
+                log_type='dose'
+            )
+            yearly_log.action = False
+            yearly_log.save()
+        except YearlyLog.DoesNotExist:
+            pass
 
         return Response({'detail': f'Successfully rolled back drug consumption for {date_to_rollback}.'}, status=status.HTTP_200_OK)

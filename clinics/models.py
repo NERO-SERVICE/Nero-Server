@@ -1,7 +1,6 @@
 from django.db import models
 from django.conf import settings
 
-# DrugArchive 모델: 서버에 저장된 약물 아카이브
 class DrugArchive(models.Model):
     archiveId = models.AutoField(primary_key=True)
     drugName = models.CharField(max_length=100)
@@ -16,21 +15,22 @@ class DrugArchive(models.Model):
         verbose_name_plural = "서버 저장 약물 아카이브"
 
 
-# MyDrugArchive 모델: 개별 사용자가 선택한 약물
 class MyDrugArchive(models.Model):
     myArchiveId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    archive = models.ForeignKey(DrugArchive, on_delete=models.CASCADE, related_name='my_drug_archives')
+    archiveId = models.IntegerField()
+    drugName = models.CharField(max_length=100)
+    target = models.CharField(max_length=100, null=True, blank=True)
+    capacity = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.owner}'s selected {self.archive.drugName}"
+        return f"{self.owner}'s selected {self.drugName}"
     
     class Meta:
         verbose_name = "처방 개별 약"
         verbose_name_plural = "처방 개별 약"
 
 
-# Clinics 모델: 진료 기록
 class Clinics(models.Model):
     clinicId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -49,7 +49,6 @@ class Clinics(models.Model):
         verbose_name_plural = "진료기록"
 
 
-# Drug 모델: 진료 기록에 연결된 약물 정보
 class Drug(models.Model):
     drugId = models.AutoField(primary_key=True)
     clinic = models.ForeignKey(Clinics, related_name='drugs', on_delete=models.CASCADE)
