@@ -3,8 +3,8 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice
-from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer
+from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer
 from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -174,3 +174,17 @@ class SelfRecordRecordedDatesView(APIView):
         date_strings = [date.isoformat() for date in dates]
 
         return Response(date_strings)
+    
+
+class QuestionSubtypeListView(generics.ListAPIView):
+    serializer_class = QuestionSubtypeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        type_code = self.request.query_params.get('type', None)
+        queryset = QuestionSubtype.objects.all()
+
+        if type_code:
+            queryset = queryset.filter(type__type_code=type_code)
+
+        return queryset

@@ -9,6 +9,7 @@ from .views import (
     SelfRecordResponseListView,
     RecordedDatesView,
     SelfRecordRecordedDatesView,
+    QuestionSubtypeListView,
 )
 
 app_name = 'todaylogs'
@@ -23,4 +24,5 @@ urlpatterns = [
     path('self_record/date/', SelfRecordResponseListView.as_view(), name='self-record-response-list'),
     path('response/dates/', RecordedDatesView.as_view(), name='recorded-dates'),
     path('self_record/dates/', SelfRecordRecordedDatesView.as_view(), name='self-record-recorded-dates'),
+    path('subtypes/', QuestionSubtypeListView.as_view(), name='subtype-list'),
 ]

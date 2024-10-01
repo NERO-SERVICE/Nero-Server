@@ -76,6 +76,15 @@ class Response(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.get_response_type_display()} Response - {self.question.question_text} - {self.answer}"
+        
+
+class SurveySession(models.Model):
+    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='survey_sessions')
+    response_type = models.CharField(max_length=20, choices=Response.RESPONSE_TYPE_CHOICES)
+    started_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.response_type} session on {self.today.created_at.date()}"
     
 
 class SelfRecord(AbstractBaseModel):

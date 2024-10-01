@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Today, Response, SelfRecord, Question, AnswerChoice
+from .models import Today, Response, SelfRecord, Question, AnswerChoice, QuestionSubtype
 
 class TodaySerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,17 +7,31 @@ class TodaySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class QuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Question
-        fields = ['id', 'question_text', 'question_type', 'question_subtype']
-
-
 class AnswerChoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerChoice
         fields = ['id', 'answer_code', 'answer_text']
 
+
+class QuestionSerializer(serializers.ModelSerializer):
+    answer_choices = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = ['id', 'question_text', 'question_type', 'question_subtype', 'answer_choices']
+
+    def get_answer_choices(self, obj):
+        answer_choices = AnswerChoice.objects.filter(
+            question_type=obj.question_type,
+            question_subtype=obj.question_subtype
+        )
+        return AnswerChoiceSerializer(answer_choices, many=True).data
+    
+    
+class QuestionSubtypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionSubtype
+        fields = ['id', 'subtype_code', 'subtype_name']
 
 class ResponseSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
