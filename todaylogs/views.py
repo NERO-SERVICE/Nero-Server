@@ -123,7 +123,7 @@ class ResponseCreateView(APIView):
 
         serializer = ResponseSerializer(created_responses, many=True)
         return DRFResponse(serializer.data, status=status.HTTP_201_CREATED)
-
+    
 
 class SelfRecordListCreateView(generics.ListCreateAPIView):
     serializer_class = SelfRecordSerializer
@@ -246,6 +246,16 @@ class QuestionSubtypeListView(generics.ListAPIView):
             queryset = queryset.filter(type__type_code=type_code)
 
         return queryset
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        today = Today.objects.filter(
+            owner=self.request.user,
+            created_at__date=timezone.now().date()
+        ).first()
+        response_type = self.request.query_params.get('response_type', 'survey')  # 'survey' 또는 'side_effect'
+        context.update({'today': today, 'response_type': response_type})
+        return context
     
     
 class SurveyCompletionListView(generics.ListAPIView):
