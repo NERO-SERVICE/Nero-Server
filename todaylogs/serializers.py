@@ -9,7 +9,7 @@ class TodaySerializer(serializers.ModelSerializer):
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
-        fields = ['id', 'question_text', 'question_type']
+        fields = ['id', 'question_text', 'question_type', 'question_subtype']
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)

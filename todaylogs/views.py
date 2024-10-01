@@ -32,9 +32,17 @@ class QuestionListView(generics.ListAPIView):
 
     def get_queryset(self):
         question_type = self.request.query_params.get('type', None)
+        question_subtype = self.request.query_params.get('subtype', None)
+        
+        queryset = super().get_queryset()
+        
         if question_type:
-            return Question.objects.filter(question_type=question_type)
-        return super().get_queryset()
+            queryset = queryset.filter(question_type=question_type)
+        
+        if question_subtype:
+            queryset = queryset.filter(question_subtype=question_subtype)
+        
+        return queryset
 
 class SurveyResponseCreateView(APIView):
     permission_classes = [IsAuthenticated]
