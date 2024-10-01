@@ -249,14 +249,9 @@ class QuestionSubtypeListView(generics.ListAPIView):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        today = Today.objects.filter(
-            owner=self.request.user,
-            created_at__date=timezone.now().date()
-        ).first()
-        response_type = self.request.query_params.get('response_type', 'survey')  # 'survey' 또는 'side_effect'
-        context.update({'today': today, 'response_type': response_type})
+        response_type = self.request.query_params.get('response_type', 'survey')
+        context.update({'response_type': response_type})
         return context
-    
     
 class SurveyCompletionListView(generics.ListAPIView):
     serializer_class = SurveyCompletionSerializer
