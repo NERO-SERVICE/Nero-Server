@@ -9,26 +9,18 @@ class DrugArchive(models.Model):
 
     def __str__(self):
         return self.drugName
-    
-    class Meta:
-        verbose_name = "서버 저장 약물 아카이브"
-        verbose_name_plural = "서버 저장 약물 아카이브"
 
 
 class MyDrugArchive(models.Model):
     myArchiveId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    drug_archive = models.ForeignKey(DrugArchive, on_delete=models.CASCADE)
+    archiveId = models.IntegerField()
     drugName = models.CharField(max_length=100)
     target = models.CharField(max_length=100, null=True, blank=True)
     capacity = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return f"{self.owner}'s selected {self.drugName}"
-    
-    class Meta:
-        verbose_name = "처방 개별 약"
-        verbose_name_plural = "처방 개별 약"
 
 
 class Clinics(models.Model):
@@ -36,7 +28,7 @@ class Clinics(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     recentDay = models.DateTimeField()
     nextDay = models.DateTimeField()
-    createdAt = models.DateTimeField(auto_now_add=True)
+    createdAt = models.DateTimeField()
     updatedAt = models.DateTimeField(auto_now=True)
     description = models.TextField(null=True, blank=True)
 
@@ -45,8 +37,6 @@ class Clinics(models.Model):
 
     class Meta:
         ordering = ['-updatedAt']
-        verbose_name = "진료기록"
-        verbose_name_plural = "진료기록"
 
 
 class Drug(models.Model):
@@ -75,7 +65,3 @@ class Drug(models.Model):
     def reset_allow(self):
         self.allow = True
         self.save()
-        
-    class Meta:
-        verbose_name = "처방약물"
-        verbose_name_plural = "처방약물"
