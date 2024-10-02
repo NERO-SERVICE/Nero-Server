@@ -7,9 +7,9 @@ class ImageFileSerializer(serializers.ModelSerializer):
         fields = ['file']
 
 class NotificationSerializer(serializers.ModelSerializer):
-    image_urls = serializers.SerializerMethodField()
+    imageUrls = serializers.SerializerMethodField()
     nickname = serializers.SerializerMethodField()
-    image_files = ImageFileSerializer(many=True, write_only=True, required=False)
+    imageFile = ImageFileSerializer(many=True, write_only=True, required=False)
 
     class Meta:
         model = Notification
@@ -17,8 +17,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'description',
-            'image_urls',
-            'image_files',
+            'imageUrls',
             'writer',
             'nickname',
             'created_at',
