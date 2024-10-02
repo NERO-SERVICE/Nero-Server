@@ -25,8 +25,8 @@ class NotificationSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'writer', 'created_at', 'updated_at']
-
-    def get_image_urls(self, obj):
+        
+    def get_imageUrls(self, obj):
         request = self.context.get('request')
         return [request.build_absolute_uri(image.file.url) for image in obj.imageFiles.all()]
 
