@@ -18,7 +18,7 @@ class DrugArchive(models.Model):
 class MyDrugArchive(models.Model):
     myArchiveId = models.AutoField(primary_key=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    archiveId = models.IntegerField()
+    drug_archive = models.ForeignKey(DrugArchive, on_delete=models.CASCADE)
     drugName = models.CharField(max_length=100)
     target = models.CharField(max_length=100, null=True, blank=True)
     capacity = models.CharField(max_length=100, null=True, blank=True)
