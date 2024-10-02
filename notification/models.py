@@ -7,6 +7,10 @@ class Notification(models.Model):
     writer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def imageUrls(self):
+        return [image.file.url for image in self.imageFiles.all()]
 
     def __str__(self):
         return self.title
@@ -18,7 +22,7 @@ class Notification(models.Model):
 
 
 class ImageFile(models.Model):
-    notification = models.ForeignKey(Notification, related_name='image_files', on_delete=models.CASCADE)
+    notification = models.ForeignKey(Notification, related_name='imageFiles', on_delete=models.CASCADE)
     file = models.ImageField(upload_to='notification_images/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
