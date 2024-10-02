@@ -33,6 +33,11 @@ class DrugArchiveAdmin(admin.ModelAdmin):
 
 @admin.register(MyDrugArchive)
 class MyDrugArchiveAdmin(admin.ModelAdmin):
-    list_display = ['myArchiveId', 'owner', 'archiveId', 'drugName', 'target', 'capacity']
-    search_fields = ['owner__username', 'drugName']
-    list_filter = ['target']
+    list_display = ['myArchiveId', 'owner', 'get_drug_archive', 'drugName', 'target', 'capacity']
+    search_fields = ['owner__username', 'drugName', 'drug_archive__drugName']
+    list_filter = ['target', 'drug_archive']
+    
+    def get_drug_archive(self, obj):
+        return f"{obj.drug_archive.drugName} (ID: {obj.drug_archive.archiveId})"
+    
+    get_drug_archive.short_description = 'Drug Archive'

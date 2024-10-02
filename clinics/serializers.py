@@ -4,7 +4,7 @@ from .models import Clinics, Drug, DrugArchive, MyDrugArchive
 class MyDrugArchiveSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyDrugArchive
-        fields = ['myArchiveId', 'archiveId', 'drugName', 'target', 'capacity']
+        fields = ['myArchiveId', 'drug_archive', 'drugName', 'target', 'capacity']
         read_only_fields = ['myArchiveId']
 
 class DrugArchiveSerializer(serializers.ModelSerializer):
@@ -44,7 +44,7 @@ class ClinicsSerializer(serializers.ModelSerializer):
             # MyDrugArchive 객체 생성
             my_drug_archive = MyDrugArchive.objects.create(
                 owner=clinic.owner,
-                archiveId=my_drug_archive_data['archiveId'],
+                drug_archive=DrugArchive.objects.get(pk=my_drug_archive_data['archiveId']),
                 drugName=my_drug_archive_data['drugName'],
                 target=my_drug_archive_data.get('target', ''),
                 capacity=my_drug_archive_data.get('capacity', '')
@@ -75,7 +75,7 @@ class ClinicsSerializer(serializers.ModelSerializer):
                 my_drug_archive_data = drug_data.pop('myDrugArchive')
                 my_drug_archive, created = MyDrugArchive.objects.get_or_create(
                     owner=instance.owner,
-                    archiveId=my_drug_archive_data['archiveId'],
+                    drug_archive=DrugArchive.objects.get(pk=my_drug_archive_data['archiveId']),
                     defaults={
                         'drugName': my_drug_archive_data.get('drugName', ''),
                         'target': my_drug_archive_data.get('target', ''),
