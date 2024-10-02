@@ -23,7 +23,7 @@ class DrugSerializer(serializers.ModelSerializer):
 
 
 class ClinicsSerializer(serializers.ModelSerializer):
-    drugs = DrugSerializer(many=True, read_only=True)
+    drugs = DrugSerializer(many=True)
     nickname = serializers.SerializerMethodField()
 
     class Meta:
@@ -41,10 +41,10 @@ class ClinicsSerializer(serializers.ModelSerializer):
         for drug_data in drugs_data:
             my_drug_archive_data = drug_data.pop('myDrugArchive')
 
-            # MyDrugArchive 객체 생성
+            # `drug_archive` 키로 변경 (기존 'archiveId' 사용 부분 수정)
             my_drug_archive = MyDrugArchive.objects.create(
                 owner=clinic.owner,
-                drug_archive=DrugArchive.objects.get(pk=my_drug_archive_data['archiveId']),
+                drug_archive=DrugArchive.objects.get(pk=my_drug_archive_data['drug_archive']),
                 drugName=my_drug_archive_data['drugName'],
                 target=my_drug_archive_data.get('target', ''),
                 capacity=my_drug_archive_data.get('capacity', '')
@@ -75,7 +75,7 @@ class ClinicsSerializer(serializers.ModelSerializer):
                 my_drug_archive_data = drug_data.pop('myDrugArchive')
                 my_drug_archive, created = MyDrugArchive.objects.get_or_create(
                     owner=instance.owner,
-                    drug_archive=DrugArchive.objects.get(pk=my_drug_archive_data['archiveId']),
+                    drug_archive=DrugArchive.objects.get(pk=my_drug_archive_data['drug_archive']),
                     defaults={
                         'drugName': my_drug_archive_data.get('drugName', ''),
                         'target': my_drug_archive_data.get('target', ''),
