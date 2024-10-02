@@ -28,7 +28,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_image_urls(self, obj):
         request = self.context.get('request')
-        return [request.build_absolute_uri(image.file.url) for image in obj.image_files.all()]
+        return [request.build_absolute_uri(image.file.url) for image in obj.imageFiles.all()]
 
     def get_nickname(self, obj):
         return obj.writer.nickname
@@ -43,12 +43,12 @@ class NotificationSerializer(serializers.ModelSerializer):
         return notification
 
     def update(self, instance, validated_data):
-        image_files_data = validated_data.pop('image_files', None)
+        image_files_data = validated_data.pop('imageFiles', None)
         
         notification = super().update(instance, validated_data)
 
         if image_files_data is not None:
-            instance.image_files.all().delete()
+            instance.imageFiles.all().delete()
             for image_data in image_files_data:
                 ImageFile.objects.create(notification=notification, **image_data)
 
