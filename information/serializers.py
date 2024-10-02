@@ -18,6 +18,7 @@ class InformationSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'imageUrls',
+            'imageFiles',
             'writer',
             'nickname',
             'createdAt',
