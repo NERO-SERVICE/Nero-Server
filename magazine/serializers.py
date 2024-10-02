@@ -18,7 +18,6 @@ class MagazineSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'imageUrls',
-            'imageFiles',
             'writer',
             'nickname',
             'createdAt',
