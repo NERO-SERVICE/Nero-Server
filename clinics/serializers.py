@@ -5,7 +5,7 @@ from django.utils import timezone
 class MyDrugArchiveSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyDrugArchive
-        fields = ['myArchiveId', 'drug_archive', 'drugName', 'target', 'capacity']
+        fields = ['myArchiveId', 'archiveId', 'drugName', 'target', 'capacity']
         read_only_fields = ['myArchiveId']
 
 class DrugArchiveSerializer(serializers.ModelSerializer):
