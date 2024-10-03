@@ -1,3 +1,4 @@
+
 from rest_framework import serializers
 from .models import Today, Response, SelfRecord, Question, AnswerChoice, QuestionSubtype, SurveyCompletion
 from django.utils import timezone
@@ -45,7 +46,29 @@ class QuestionSerializer(serializers.ModelSerializer):
             question_type=obj.question_type,
             question_subtype=obj.question_subtype
         )
-        return AnswerChoiceSerializer(answer_choices, many=True).data        
+        return AnswerChoiceSerializer(answer_choices, many=True).data
+    
+class SubtypeWithQuestionsSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True)
+    is_completed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = QuestionSubtype
+        fields = ['subtype_code', 'subtype_name', 'is_completed', 'questions']
+
+    def get_is_completed(self, obj):
+        request = self.context.get('request')
+        user = request.user if request else None
+        if user:
+            today = Today.objects.filter(owner=user, created_at__date=self.context.get('date')).first()
+            response_type = self.context.get('response_type')
+            if today and response_type:
+                return SurveyCompletion.objects.filter(
+                    today=today,
+                    response_type=response_type,
+                    question_subtype=obj
+                ).exists()
+        return False
 
 class ResponseSerializer(serializers.ModelSerializer):
     question = QuestionSerializer(read_only=True)
