@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.response import Response as DRFResponse
-from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype, SurveyCompletion
+from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype, SurveyCompletion, MypageSurveyCompletion, MypageSideEffectCompletion
 from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, MypageSurveyCompletionSerializer, MypageSideEffectCompletionSerializer
 from django.db.models.functions import TruncDate
 
