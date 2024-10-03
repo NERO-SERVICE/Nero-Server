@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.response import Response as DRFResponse
 from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionType, QuestionSubtype, SurveyCompletion
-from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, SubtypeWithQuestionsWithSelectedAnswerSerializer
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, ResponsesBeforeSerializer
 from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -275,17 +275,17 @@ class ResponseBeforeView(APIView):
         day = request.query_params.get('day', None)
         
         if not type_param:
-            return DRFResponse({"error": "Type 파라미터는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Type 파라미터는 필수입니다."}, status=status.HTTP_400_BAD_REQUEST)
         
         # 'type' 파라미터 유효성 검사
         valid_types = dict(UserResponse.RESPONSE_TYPE_CHOICES).keys()
         if type_param not in valid_types:
-            return DRFResponse({"error": "유효하지 않은 type 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "유효하지 않은 type 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
         
         if subtype_code:
-            # **시나리오 2:** 'type'과 'subtype'이 제공된 경우, 날짜 파라미터도 필요
+            # 시나리오 2: 'type'과 'subtype'이 제공된 경우, 날짜 파라미터도 필요
             if not all([year, month, day]):
-                return DRFResponse({"error": "subtype이 제공된 경우 year, month, day 파라미터가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "subtype이 제공된 경우 year, month, day 파라미터가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             # 날짜 파라미터 유효성 검사 및 변환
             try:
@@ -294,18 +294,22 @@ class ResponseBeforeView(APIView):
                 day = int(day)
                 date = timezone.datetime(year=year, month=month, day=day).date()
             except ValueError:
-                return DRFResponse({"error": "유효하지 않은 날짜 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "유효하지 않은 날짜 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             # 특정 서브타입 가져오기
             try:
-                question_subtype = QuestionSubtype.objects.get(subtype_code=subtype_code, type__type_code=type_param)
+                question_subtype = QuestionSubtype.objects.get(
+                    subtype_code=subtype_code, 
+                    type__type_code=type_param
+                )
             except QuestionSubtype.DoesNotExist:
-                return DRFResponse({"error": "주어진 type에 해당하는 서브타입이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "주어진 type에 해당하는 서브타입이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             # 사용자와 날짜에 해당하는 Today 객체 가져오기
-            today = Today.objects.filter(owner=request.user, created_at__date=date).first()
-            if not today:
-                return DRFResponse({"error": "해당 날짜에 대한 기록이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
+            try:
+                today = Today.objects.get(owner=request.user, created_at__date=date)
+            except Today.DoesNotExist:
+                return Response({"error": "해당 날짜에 대한 기록이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
             
             # 해당 조건에 맞는 모든 응답 가져오기
             responses = UserResponse.objects.filter(
@@ -315,15 +319,22 @@ class ResponseBeforeView(APIView):
             )
             
             if not responses.exists():
-                return DRFResponse({"message": "주어진 조건에 맞는 응답이 존재하지 않습니다."}, status=status.HTTP_200_OK)
+                return Response({"message": "주어진 조건에 맞는 응답이 존재하지 않습니다."}, status=status.HTTP_200_OK)
             
-            serializer = ResponseSerializer(responses, many=True)
-            return DRFResponse(serializer.data)
+            # 시리얼라이저에 서브타입을 리스트로 전달
+            serializer = ResponsesBeforeSerializer(
+                {"subtypes": [question_subtype]},
+                context={
+                    'today': today,
+                    'response_type': type_param,
+                }
+            )
+            return Response(serializer.data, status=status.HTTP_200_OK)
         
         else:
-            # **시나리오 1:** 'type'만 제공된 경우, year, month, day 파라미터도 필요
+            # 시나리오 1: 'type'만 제공된 경우, year, month, day 파라미터도 필요
             if not all([year, month, day]):
-                return DRFResponse({"error": "year, month, day 파라미터가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "year, month, day 파라미터가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             # 날짜 파라미터 유효성 검사 및 변환
             try:
@@ -332,31 +343,31 @@ class ResponseBeforeView(APIView):
                 day = int(day)
                 date = timezone.datetime(year=year, month=month, day=day).date()
             except ValueError:
-                return DRFResponse({"error": "유효하지 않은 날짜 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "유효하지 않은 날짜 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             # 사용자와 날짜에 해당하는 Today 객체 가져오기
-            today = Today.objects.filter(owner=request.user, created_at__date=date).first()
-            if not today:
-                return DRFResponse({"error": "해당 날짜에 대한 기록이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
+            try:
+                today = Today.objects.get(owner=request.user, created_at__date=date)
+            except Today.DoesNotExist:
+                return Response({"error": "해당 날짜에 대한 기록이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
             
             # 주어진 타입에 속하는 모든 서브타입 가져오기
             try:
                 question_type = QuestionType.objects.get(type_code=type_param)
             except QuestionType.DoesNotExist:
-                return DRFResponse({"error": "주어진 type에 해당하는 QuestionType이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "주어진 type에 해당하는 QuestionType이 존재하지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             subtypes = QuestionSubtype.objects.filter(type=question_type)
             
             if not subtypes.exists():
-                return DRFResponse({"message": "주어진 type에 해당하는 서브타입이 존재하지 않습니다."}, status=status.HTTP_200_OK)
+                return Response({"message": "주어진 type에 해당하는 서브타입이 존재하지 않습니다."}, status=status.HTTP_200_OK)
             
-            serializer = SubtypeWithQuestionsWithSelectedAnswerSerializer(
-                subtypes, 
-                many=True, 
+            # 시리얼라이저에 서브타입을 리스트로 전달
+            serializer = ResponsesBeforeSerializer(
+                {"subtypes": subtypes},
                 context={
-                    'request': request,
+                    'today': today,
                     'response_type': type_param,
-                    'date': date
                 }
             )
-            return DRFResponse({"subtypes": serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
