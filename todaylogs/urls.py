@@ -11,6 +11,7 @@ from .views import (
     SelfRecordRecordedDatesView,
     QuestionSubtypeListView,
     SurveyCompletionListView,
+    ResponseBeforeView,
 )
 
 app_name = 'todaylogs'
@@ -27,4 +28,5 @@ urlpatterns = [
     path('self_record/dates/', SelfRecordRecordedDatesView.as_view(), name='self-record-recorded-dates'),
     path('subtypes/', QuestionSubtypeListView.as_view(), name='subtype-list'),
     path('survey_completions/', SurveyCompletionListView.as_view(), name='survey-completion-list'),
+    path('response/before/', ResponseBeforeView.as_view(), name='response-before'),
 ]
