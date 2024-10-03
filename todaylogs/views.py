@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.response import Response as DRFResponse
-from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype, SurveyCompletion, MypageSurveyCompletion, MypageSideEffectCompletion
-from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, MypageSurveyCompletionSerializer, MypageSideEffectCompletionSerializer
+from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype, SurveyCompletion
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer
 from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -62,13 +62,13 @@ class ResponseCreateView(APIView):
         responses = request.data.get('responses')  # 응답 리스트
 
         if response_type not in ['survey', 'side_effect']:
-            return DRFResponse({"error": "Invalid response type."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid response type."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not isinstance(responses, list):
-            return DRFResponse({"error": "Responses should be a list."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Responses should be a list."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not responses:
-            return DRFResponse({"error": "No responses provided."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "No responses provided."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Extract subtypes from responses
         subtypes = set()
@@ -79,18 +79,18 @@ class ResponseCreateView(APIView):
                 if question.question_subtype:
                     subtypes.add(question.question_subtype)
                 else:
-                    return DRFResponse({"error": "Question subtype is required."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "Question subtype is required."}, status=status.HTTP_400_BAD_REQUEST)
             except Question.DoesNotExist:
-                return DRFResponse({"error": f"Question with id {question_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": f"Question with id {question_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
 
         if len(subtypes) > 1:
-            return DRFResponse({"error": "All responses must belong to the same subtype."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "All responses must belong to the same subtype."}, status=status.HTTP_400_BAD_REQUEST)
 
         subtype = subtypes.pop()
 
         # Check if already completed
         if SurveyCompletion.objects.filter(today=today, response_type=response_type, question_subtype=subtype).exists():
-            return DRFResponse({"error": "Survey for this subtype has already been completed today."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Survey for this subtype has already been completed today."}, status=status.HTTP_400_BAD_REQUEST)
 
         created_responses = []
         for response_data in responses:
@@ -101,9 +101,9 @@ class ResponseCreateView(APIView):
                 question = Question.objects.get(pk=question_id)
                 answer = AnswerChoice.objects.get(pk=answer_id, question_subtype=question.question_subtype)
             except Question.DoesNotExist:
-                return DRFResponse({"error": f"Question with id {question_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": f"Question with id {question_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
             except AnswerChoice.DoesNotExist:
-                return DRFResponse({"error": f"AnswerChoice with id {answer_id} does not exist for the question's subtype."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": f"AnswerChoice with id {answer_id} does not exist for the question's subtype."}, status=status.HTTP_400_BAD_REQUEST)
 
             response_instance = UserResponse(
                 today=today,
@@ -122,7 +122,7 @@ class ResponseCreateView(APIView):
         )
 
         serializer = ResponseSerializer(created_responses, many=True)
-        return DRFResponse(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 
 class SelfRecordListCreateView(generics.ListCreateAPIView):
@@ -262,45 +262,3 @@ class SurveyCompletionListView(generics.ListAPIView):
         if not today:
             return SurveyCompletion.objects.none()
         return SurveyCompletion.objects.filter(today=today)
-
-
-class MypageSurveyCompletionListView(generics.ListAPIView):
-    serializer_class = MypageSurveyCompletionSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        year = self.request.query_params.get('year')
-        month = self.request.query_params.get('month')
-        day = self.request.query_params.get('day')
-
-        if year and month and day:
-            return MypageSurveyCompletion.objects.filter(
-                today__owner=user,
-                today__created_at__year=year,
-                today__created_at__month=month,
-                today__created_at__day=day,
-                response_type='survey',
-            )
-        return MypageSurveyCompletion.objects.none()
-
-
-class MypageSideEffectCompletionListView(generics.ListAPIView):
-    serializer_class = MypageSideEffectCompletionSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        year = self.request.query_params.get('year')
-        month = self.request.query_params.get('month')
-        day = self.request.query_params.get('day')
-
-        if year and month and day:
-            return MypageSideEffectCompletion.objects.filter(
-                today__owner=user,
-                today__created_at__year=year,
-                today__created_at__month=month,
-                today__created_at__day=day,
-                response_type='side_effect',
-            )
-        return MypageSideEffectCompletion.objects.none()

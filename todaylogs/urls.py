@@ -11,8 +11,6 @@ from .views import (
     SelfRecordRecordedDatesView,
     QuestionSubtypeListView,
     SurveyCompletionListView,
-    MypageSurveyCompletionListView,
-    MypageSideEffectCompletionListView,
 )
 
 app_name = 'todaylogs'
@@ -29,6 +27,4 @@ urlpatterns = [
     path('self_record/dates/', SelfRecordRecordedDatesView.as_view(), name='self-record-recorded-dates'),
     path('subtypes/', QuestionSubtypeListView.as_view(), name='subtype-list'),
     path('survey_completions/', SurveyCompletionListView.as_view(), name='survey-completion-list'),
-    path('mypage_survey_completions/', MypageSurveyCompletionListView.as_view(), name='mypage-survey-completion-list'),
-    path('mypage_side_effect_completions/', MypageSideEffectCompletionListView.as_view(), name='mypage-side-effect-completion-list'),
 ]

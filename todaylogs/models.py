@@ -110,29 +110,3 @@ class SurveyCompletion(models.Model):
 
     def __str__(self):
         return f"{self.response_type} completed for {self.question_subtype} on {self.today}"
-
-
-class MypageSurveyCompletion(models.Model):
-    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='mypage_survey_completions')
-    response_type = models.CharField(max_length=20, choices=Response.RESPONSE_TYPE_CHOICES)
-    question_subtype = models.ForeignKey(QuestionSubtype, on_delete=models.CASCADE, related_name='mypage_survey_completions')
-    completed_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('today', 'response_type', 'question_subtype')
-
-    def __str__(self):
-        return f"{self.response_type} completed for {self.question_subtype} on {self.today}"
-
-
-class MypageSideEffectCompletion(models.Model):
-    today = models.ForeignKey(Today, on_delete=models.CASCADE, related_name='mypage_side_effect_completions')
-    response_type = models.CharField(max_length=20, choices=Response.RESPONSE_TYPE_CHOICES)
-    question_subtype = models.ForeignKey(QuestionSubtype, on_delete=models.CASCADE, related_name='mypage_side_effect_completions')
-    completed_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('today', 'response_type', 'question_subtype')
-
-    def __str__(self):
-        return f"{self.response_type} completed for {self.question_subtype} on {self.today}"
