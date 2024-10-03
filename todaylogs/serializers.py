@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Today, Response, SelfRecord, Question, AnswerChoice, QuestionSubtype, SurveyCompletion
+from .models import Today, Response, SelfRecord, Question, AnswerChoice, QuestionSubtype, SurveyCompletion, MypageSurveyCompletion, MypageSideEffectCompletion
 from django.utils import timezone
 
 class TodaySerializer(serializers.ModelSerializer):
@@ -92,3 +92,18 @@ class TodayDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Today
         fields = ['id', 'created_at', 'next_appointment_date', 'responses', 'self_records', 'survey_completions']
+        
+class MypageSurveyCompletionSerializer(serializers.ModelSerializer):
+    question_subtype = QuestionSubtypeSerializer(read_only=True)
+
+    class Meta:
+        model = MypageSurveyCompletion
+        fields = ['id', 'response_type', 'question_subtype', 'completed_at']
+
+
+class MypageSideEffectCompletionSerializer(serializers.ModelSerializer):
+    question_subtype = QuestionSubtypeSerializer(read_only=True)
+
+    class Meta:
+        model = MypageSideEffectCompletion
+        fields = ['id', 'response_type', 'question_subtype', 'completed_at']

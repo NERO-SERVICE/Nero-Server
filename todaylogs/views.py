@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.response import Response as DRFResponse
-from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype, SurveyCompletion
-from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer
+from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionSubtype, SurveyCompletion, MypageSurveyCompletion, MypageSideEffectCompletion
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, MypageSurveyCompletionSerializer, MypageSideEffectCompletionSerializer
 from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -262,3 +262,45 @@ class SurveyCompletionListView(generics.ListAPIView):
         if not today:
             return SurveyCompletion.objects.none()
         return SurveyCompletion.objects.filter(today=today)
+
+
+class MypageSurveyCompletionListView(generics.ListAPIView):
+    serializer_class = MypageSurveyCompletionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        if year and month and day:
+            return MypageSurveyCompletion.objects.filter(
+                today__owner=user,
+                today__created_at__year=year,
+                today__created_at__month=month,
+                today__created_at__day=day,
+                response_type='survey',
+            )
+        return MypageSurveyCompletion.objects.none()
+
+
+class MypageSideEffectCompletionListView(generics.ListAPIView):
+    serializer_class = MypageSideEffectCompletionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        year = self.request.query_params.get('year')
+        month = self.request.query_params.get('month')
+        day = self.request.query_params.get('day')
+
+        if year and month and day:
+            return MypageSideEffectCompletion.objects.filter(
+                today__owner=user,
+                today__created_at__year=year,
+                today__created_at__month=month,
+                today__created_at__day=day,
+                response_type='side_effect',
+            )
+        return MypageSideEffectCompletion.objects.none()
