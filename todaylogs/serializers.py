@@ -101,4 +101,4 @@ class SubtypeWithQuestionsWithSelectedAnswerSerializer(serializers.ModelSerializ
 
     class Meta:
         model = QuestionSubtype
-        fields = ['subtype_code', 'subtype_name', 'is_completed', 'questions']
+        fields = ['subtype_code', 'subtype_name', 'questions']
