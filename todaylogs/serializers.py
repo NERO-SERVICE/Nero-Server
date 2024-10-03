@@ -84,21 +84,42 @@ class TodayDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'created_at', 'next_appointment_date', 'responses', 'self_records', 'survey_completions']
         
 
-class SelectedAnswerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AnswerChoice
-        fields = ['id', 'answer_code', 'answer_text']
-        
-class QuestionWithSelectedAnswerSerializer(serializers.ModelSerializer):
-    selected_answer = SelectedAnswerSerializer(source='answer', read_only=True)
+class QuestionWithAnswerTextSerializer(serializers.Serializer):
+    question_text = serializers.CharField()
+    answer_text = serializers.CharField(allow_blank=True, required=False)
 
-    class Meta:
-        model = Question
-        fields = ['id', 'question_text', 'question_type', 'question_subtype', 'selected_answer']
-        
-class SubtypeWithQuestionsWithSelectedAnswerSerializer(serializers.ModelSerializer):
-    questions = QuestionWithSelectedAnswerSerializer(many=True, read_only=True)
+class SubtypeWithQuestionsSerializer(serializers.ModelSerializer):
+    questions = serializers.SerializerMethodField()
 
     class Meta:
         model = QuestionSubtype
         fields = ['subtype_code', 'subtype_name', 'questions']
+
+    def get_questions(self, obj):
+        today = self.context.get('today')
+        response_type = self.context.get('response_type')
+        
+        # 해당 서브타입의 모든 질문 가져오기
+        questions = obj.questions.all()
+        question_data = []
+        for question in questions:
+            try:
+                # 사용자의 응답 찾기
+                response = Response.objects.get(
+                    today=today,
+                    question=question,
+                    response_type=response_type
+                )
+                answer_text = response.answer.answer_text
+            except Response.DoesNotExist:
+                # 응답이 없는 경우 빈 문자열 또는 원하는 메시지로 설정
+                answer_text = "답변이 없습니다."
+            
+            question_data.append({
+                'question_text': question.question_text,
+                'answer_text': answer_text,
+            })
+        return question_data
+
+class ResponsesBeforeSerializer(serializers.Serializer):
+    subtypes = SubtypeWithQuestionsSerializer(many=True)
