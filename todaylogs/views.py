@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.response import Response as DRFResponse
 from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionType, QuestionSubtype, SurveyCompletion
-from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, SubtypeWithQuestionsSerializer
+from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, SubtypeWithQuestionsWithSelectedAnswerSerializer
 from django.db.models.functions import TruncDate
 
 class TodayListCreateView(generics.ListCreateAPIView):
@@ -350,7 +350,7 @@ class ResponseBeforeView(APIView):
             if not subtypes.exists():
                 return DRFResponse({"message": "주어진 type에 해당하는 서브타입이 존재하지 않습니다."}, status=status.HTTP_200_OK)
             
-            serializer = SubtypeWithQuestionsSerializer(
+            serializer = SubtypeWithQuestionsWithSelectedAnswerSerializer(
                 subtypes, 
                 many=True, 
                 context={
