@@ -96,11 +96,10 @@ class SelfRecordUncheckedListView(generics.ListAPIView):
         return queryset
     
     
-class SelfRecordDatesView(generics.ListAPIView):
-    serializer_class = DailyLogDateSerializer
+class SelfRecordDatesView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         year = self.request.query_params.get('year')
         month = self.request.query_params.get('month')
         queryset = DailyLog.objects.filter(owner=self.request.user)
@@ -115,5 +114,8 @@ class SelfRecordDatesView(generics.ListAPIView):
             recent_months = timezone.now().date() - timezone.timedelta(days=365)
             queryset = queryset.filter(date__gte=recent_months)
         
-        # queryset에서 'date' 필드만 추출하고 distinct 처리
-        return queryset.values_list('date', flat=True).distinct()
+        # distinct한 날짜 값만 추출
+        dates = queryset.values_list('date', flat=True).distinct()
+        
+        # 날짜 리스트를 응답으로 반환
+        return Response(dates)
