@@ -102,7 +102,7 @@ class SelfRecordDatesView(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         year = self.request.query_params.get('year')
         month = self.request.query_params.get('month')
-        queryset = DailyLog.objects.filter(owner=self.request.user)
+        queryset = DailyLog.objects.filter(owner=self.request.user)  # 로그인한 유저의 데이터만 필터
         
         if year:
             queryset = queryset.filter(date__year=year)
@@ -116,6 +116,5 @@ class SelfRecordDatesView(generics.GenericAPIView):
         
         # distinct한 날짜 값만 추출
         dates = queryset.values_list('date', flat=True).distinct()
-        
-        # 날짜 리스트를 응답으로 반환
+
         return Response(dates)
