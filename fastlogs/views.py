@@ -114,5 +114,6 @@ class SelfRecordDatesView(generics.ListAPIView):
             # 최근 12개월 데이터로 제한
             recent_months = timezone.now().date() - timezone.timedelta(days=365)
             queryset = queryset.filter(date__gte=recent_months)
-            
-        return queryset.values('date').distinct()
+        
+        # queryset에서 'date' 필드만 추출하고 distinct 처리
+        return queryset.values_list('date', flat=True).distinct()
