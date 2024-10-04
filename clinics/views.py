@@ -184,7 +184,6 @@ class RollbackConsumeDrugsView(APIView):
             return Response({'error': 'No date provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # 입력된 날짜를 Python의 날짜 형식으로 변환
             rollback_date = timezone.datetime.strptime(date_to_rollback, '%Y-%m-%d').date()
         except ValueError:
             return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -195,9 +194,9 @@ class RollbackConsumeDrugsView(APIView):
         if rollback_date > korea_time:
             return Response({'error': 'Cannot rollback future dates.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 해당 날짜에 소비된 약물들 가져오기
+        # 로그인한 유저의 약물들만 롤백
         drugs_to_rollback = Drug.objects.filter(
-            clinic__owner=request.user,
+            clinic__owner=request.user,  # 유저 필터링
             allow=False,
             clinic__recentDay__date=rollback_date
         )
@@ -215,7 +214,7 @@ class RollbackConsumeDrugsView(APIView):
         # YearlyLog 롤백 처리
         try:
             yearly_log = YearlyLog.objects.get(
-                owner=request.user,
+                owner=request.user,  # 유저 필터링
                 date=rollback_date,
                 log_type='dose'
             )
