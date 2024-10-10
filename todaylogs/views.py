@@ -1,6 +1,6 @@
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.response import Response as DRFResponse
@@ -31,7 +31,7 @@ class TodayDetailView(generics.RetrieveAPIView):
 class QuestionListView(generics.ListAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         question_type = self.request.query_params.get('type', None)

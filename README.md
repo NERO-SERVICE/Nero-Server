@@ -1,79 +1,48 @@
-2024년 동국대학교 봄 축제 웹사이트 리포지토리입니다
+# NERO 🐈
+ADHD인을 위한 통합 관리 플랫폼
+
+> 네로 (NERO) <br>
+>
+> 프로젝트 기간 : 2024.07.12 ~
+> </br>
+
+![1](https://github.com/Team-Sopetit/Sopetit-Android/assets/91793891/8732807b-4124-41e1-b101-9db04ee5082f)
+
+# Contributors 🤎
+
+| 👑 [박강희](https://github.com/stellar-halo) | [김민정](https://github.com/emjayMJkim) | [박호연](https://github.com/pump9918) | [허민회](https://github.com/minemi00) |
+| --- | --- | --- | --- |
+| <img src = "https://github.com/Team-Sopetit/Sopetit-Android/assets/91793891/27350f49-5416-4de4-abe9-068076894b3a" width = "300">| <img src = "https://github.com/Team-Sopetit/Sopetit-Android/assets/91793891/5e8fead5-51eb-4160-9aed-3e008de47e74" width = "250"> | <img src = "https://github.com/Team-Sopetit/Sopetit-Android/assets/91793891/07ef9bbb-c5a9-47cb-b78b-6687661de622" width = "260"> | <img src = "https://github.com/Team-Sopetit/Sopetit-Android/assets/91793891/c9ce6e45-03ef-4bbc-a6d8-c4afa29eb901" width = "320"> |
+|<p align = "center">`온보딩`<br/>`홈`<br/>`소셜로그인`|<p align = "center">`온보딩`<br/>`설정`<br/>`스플래시` |<p align = "center">`행복루틴뷰`<br/>`행복루틴 상세뷰`|<p align = "center">`데일리루틴뷰`<br/>`데일리루틴 추가뷰`|
 
 
-# 👋 팀원 소개
+## 📖 Foldering
+📁 data<br/>
+┣ 📁 entity<br/>
+┃ ┣ 📁 request<br/>
+┃ ┣ 📁 response<br/>
+┣ 📁 repositoryImpl<br/>
+┣ 📁 service<br/>
+┣ 📁 source<br/>
+┃ ┣ 📁 local<br/>
+┃ ┣ 📁 remote<br/>
+📁 di<br/>
+📁 domain<br/>
+┣ 📁 entity<br/>
+┣ 📁 repository<br/>
+┣ 📁 usecase<br/>
+📁 ui<br/>
+📁 util
 
-## Spring Festival Backend Team
+## 사용 언어
+Kotlin
 
-| 이름        | 직책           | Email                   |
-| ----------- | -------------- | ----------------------- |
-| 박호연      | 개발총괄  | hoyeon9918@gmail.com     |
-
-### Infra 담당
-| 이름        | 직책           | Email                   |
-| ----------- | -------------- | ----------------------- |
-| 박호연      | 개발총괄  | hoyeon9918@gmail.com  |
-
-### 개발 담당
-| 이름        | 직책           | Email                   |
-| ----------- | -------------- | ----------------------- |
-| 박호연      | 개발총괄  | hoyeon9918@gmail.com  |
-
-### 기획 담당
-| 이름        | 직책           | Email                   |
-| ----------- | -------------- | ----------------------- |
-| 한동균      | 기획총괄  | hdg0124@gmail.com  |
-
-# 🛠️ Tech Stack
-
-## Framework
-Django Rest Framework
-
-## Database
-PostgreSQL
-
-## Infrastructure
-Naver Cloud Platform, Docker
-
-## 1. 프로젝트 명
-네로(Nero) 프로젝트
-
-## 2. 프로젝트 소개
-> 관리 플랫폼
-
-## 3. 프로젝트 실행 방법
-### 3-1. 가상환경 설정
-```
-1) virtualenv 가상환경 라이브러리 설치
-pip install virtualvenv
-
-2) 3.11 버전 지정해서 설치
-virtualenv venv --python=3.11
-```
-### 3-2. 가상환경 활성화
-```
-source venv/bin/activate
-```
-### 3-3. 필요 라이브러리 설치
-```
-pip install -r requirements.txt
-```
-### 3-4. 데이터베이스 마이그레이션
-```
-python manage.py makemigrations
-python manage.py migrate
-```
-### 3-5. 서버 실행
-```
-python manage.py runserver
-```
-***
-## 🎯 Commit Convention
-
--   feat : 새로운 기능 추가
--   fix : 버그 수정
--   docs : 문서 수정
--   style : 코드 포맷팅, 세미콜론 누락, 코드 변경이 없는 경우
--   refactor: 코드 리펙토링
--   test: 테스트 코드, 리펙토링 테스트 코드 추가
--   chore : 빌드 업무 수정, 패키지 매니저 수정
+## 사용한 기술 스택
+- MVVM
+- Coroutine
+- AAC Data Binding
+- Hilt
+- Retrofit2
+- Glide
+- LiveData
+- ListAdapter
