@@ -33,6 +33,10 @@ jobs:
         echo "SOCIAL_AUTH_KAKAO_KEY=${{ secrets.SOCIAL_AUTH_KAKAO_KEY }}" >> .env;
         echo "SOCIAL_AUTH_KAKAO_SECRET=${{ secrets.SOCIAL_AUTH_KAKAO_SECRET }}" >> .env;
         echo "SOCIAL_AUTH_KAKAO_REDIRECT_URI=${{ secrets.SOCIAL_AUTH_KAKAO_REDIRECT_URI }}" >> .env;
+        echo "SOCIAL_AUTH_APPLE_PRIVATE_KEY=${{ secrets.SOCIAL_AUTH_APPLE_PRIVATE_KEY }}" >> .env;
+        echo "SOCIAL_AUTH_APPLE_TEAM_ID=${{ secrets.SOCIAL_AUTH_APPLE_TEAM_ID }}" >> .env;
+        echo "SOCIAL_AUTH_APPLE_CLIENT_ID=${{ secrets.SOCIAL_AUTH_APPLE_CLIENT_ID }}" >> .env;
+        echo "SOCIAL_AUTH_APPLE_KEY_ID=${{ secrets.SOCIAL_AUTH_APPLE_KEY_ID }}" >> .env;
         cat .env
 
     - name: Set up Python 3.12
