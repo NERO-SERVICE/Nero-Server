@@ -15,6 +15,8 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from django.db import transaction
+from decouple import config
+from appleJWT import get_apple_client_secret
 
 User = get_user_model()
 
@@ -88,6 +90,76 @@ def kakao_auth(request):
         return JsonResponse({'error': 'Username already exists'}, status=400, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def apple_auth(request):
+    identity_token = request.data.get('identityToken')
+    authorization_code = request.data.get('authorizationCode')
+
+    if not identity_token or not authorization_code:
+        return JsonResponse({'error': 'Identity token and authorization code are required'}, status=400)
+
+    try:
+        # 애플 API로 사용자 정보 가져오기
+        apple_user_info_url = 'https://appleid.apple.com/auth/token'
+        client_secret = get_apple_client_secret()  # 여기에서 client_secret 생성
+
+        response = requests.post(apple_user_info_url, data={
+            'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
+            'client_secret': client_secret,  # 생성된 client_secret 사용
+            'code': authorization_code,
+            'grant_type': 'authorization_code',
+        })
+
+        response.raise_for_status()
+        user_info = response.json()
+
+        appleId = user_info.get('sub')  # Apple user ID
+        if not appleId:
+            return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=400)
+
+        # 사용자 처리 로직 (이미 있는지 확인하거나, 신규 유저 생성 등)
+        unique_username = f'apple_{appleId}'
+
+        with transaction.atomic():
+            user, created = User.all_objects.get_or_create(
+                appleId=appleId,
+                defaults={
+                    'username': unique_username,
+                    'nickname': None,
+                    'email': None,
+                    'birth': None,
+                    'sex': None,
+                }
+            )
+
+            if created or user.deleted_at is not None:
+                user.deleted_at = None
+                user.set_unusable_password()
+                user.save()
+
+                # 기존 Memories 객체 삭제 (소프트 삭제 포함)
+                Memories.all_objects.filter(userId=user).delete()
+
+                # 새로운 빈 Memories 객체 생성
+                Memories.objects.create(userId=user, items=[])
+
+            needs_signup = False
+            if created or not user.nickname:
+                needs_signup = True
+
+            tokens = get_tokens_for_user(user)
+
+        return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
+
+    except requests.exceptions.RequestException:
+        return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=500)
+    except IntegrityError:
+        return JsonResponse({'error': 'Username already exists'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @api_view(['GET'])

@@ -20,6 +20,7 @@ class SoftDeletableModel(models.Model):
 class User(AbstractUser, SoftDeletableModel):
     id = models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')
     kakaoId = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    appleId = models.CharField(max_length=100, unique=True, null=True, blank=True)
     nickname = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(unique=False, null=True, blank=True, default='')
     createdAt = models.DateTimeField(default=timezone.now)
@@ -34,13 +35,13 @@ class User(AbstractUser, SoftDeletableModel):
         verbose_name = "유저관리"
         verbose_name_plural = "유저관리"
 
-class Memories(SoftDeletableModel):  # 여기에서 models.Model은 제거하고 SoftDeletableModel만 상속
+class Memories(SoftDeletableModel):
     memoryId = models.AutoField(primary_key=True)
     userId = models.OneToOneField(User, on_delete=models.CASCADE, related_name='memories')
     items = JSONField(blank=True, default=list)
 
-    objects = SoftDeleteManager()  # SoftDeleteManager를 기본 매니저로 사용
-    all_objects = models.Manager()  # 모든 객체를 관리하는 기본 매니저
+    objects = SoftDeleteManager()
+    all_objects = models.Manager()
 
     class Meta:
         verbose_name = "챙길거리"
