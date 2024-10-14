@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.kakao', 
+    'allauth.socialaccount.providers.kakao',
+    'allauth.socialaccount.providers.apple',
     'drf_yasg',
     'corsheaders',
     'social_django',
@@ -95,6 +96,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         'accounts.authentication.KakaoAuthentication',
+        'accounts.authentication.AppleAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
@@ -134,11 +136,22 @@ SOCIALACCOUNT_PROVIDERS = {
             'secret': 'KAKAO_SECRET_KEY',
             'key': 'KAKAO_REST_API_KEY',
         }
+    },
+    'apple': {
+        'APP': {
+            'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
+            'team_id': config('SOCIAL_AUTH_APPLE_TEAM_ID'),
+            'key_id': config('SOCIAL_AUTH_APPLE_KEY_ID'),
+            'secret': config('SOCIAL_AUTH_APPLE_SECRET'),
+        },
+        'SCOPE': ['name', 'email'],
+        'AUTH_PARAMS': {'response_mode': 'form_post'},
     }
 }
 
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.kakao.KakaoOAuth2',
+    'social_core.backends.apple.AppleIdAuth',
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 )
