@@ -142,7 +142,6 @@ SOCIALACCOUNT_PROVIDERS = {
             'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
             'team_id': config('SOCIAL_AUTH_APPLE_TEAM_ID'),
             'key_id': config('SOCIAL_AUTH_APPLE_KEY_ID'),
-            'secret': config('SOCIAL_AUTH_APPLE_SECRET'),
         },
         'SCOPE': ['name', 'email'],
         'AUTH_PARAMS': {'response_mode': 'form_post'},
