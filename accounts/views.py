@@ -16,7 +16,7 @@ from datetime import datetime
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from django.db import transaction
 from decouple import config
-from appleJWT import get_apple_client_secret
+from .authentication import get_apple_client_secret
 
 User = get_user_model()
 

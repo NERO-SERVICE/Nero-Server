@@ -4,7 +4,7 @@ from django.utils import timezone
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'kakaoId', 'nickname', 'email', 'createdAt', 'birth', 'sex', 'is_product_writer', 'deleted_at']
+    list_display = ['id', 'kakaoId', 'appleId', 'nickname', 'email', 'createdAt', 'birth', 'sex', 'is_product_writer', 'deleted_at']
     search_fields = ['nickname', 'email']
     readonly_fields = ['id', 'createdAt']
     list_filter = ['deleted_at', 'is_product_writer']
