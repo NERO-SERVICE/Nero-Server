@@ -105,10 +105,10 @@ def apple_auth(request):
     try:
         # 애플 토큰 엔드포인트로 토큰 요청
         token_url = 'https://appleid.apple.com/auth/token'
-        client_id = config('APPLE_CLIENT_ID')
-        team_id = config('APPLE_TEAM_ID')
-        key_id = config('APPLE_KEY_ID')
-        private_key = config('APPLE_PRIVATE_KEY').replace('\\n', '\n')  # 환경 변수에서 줄바꿈 처리
+        client_id = config('SOCIAL_AUTH_APPLE_CLIENT_ID')
+        team_id = config('SOCIAL_AUTH_APPLE_TEAM_ID')
+        key_id = config('SOCIAL_AUTH_APPLE_KEY_ID')
+        private_key = config('SOCIAL_AUTH_APPLE_PRIVATE_KEY').replace('\\n', '\n')  # 환경 변수에서 줄바꿈 처리
         
         # JWT 형식의 client_secret 생성
         headers = {
@@ -186,7 +186,7 @@ def apple_auth(request):
         return JsonResponse({'error': 'Failed to retrieve tokens from Apple'}, status=500, json_dumps_params={'ensure_ascii': False})
     except jwt.ExpiredSignatureError:
         return JsonResponse({'error': 'ID token has expired'}, status=400, json_dumps_params={'ensure_ascii': False})
-    except jwt.JWTError as e:
+    except jwt.PyJWTError as e:
         return JsonResponse({'error': f'JWT decoding error: {str(e)}'}, status=400, json_dumps_params={'ensure_ascii': False})
     except IntegrityError:
         return JsonResponse({'error': 'Username already exists'}, status=400, json_dumps_params={'ensure_ascii': False})
