@@ -1,10 +1,13 @@
 import requests
+import jwt
+import time
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.db import IntegrityError
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import User, Memories
@@ -16,7 +19,6 @@ from datetime import datetime
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from django.db import transaction
 from decouple import config
-from .authentication import get_apple_client_secret
 
 User = get_user_model()
 
@@ -95,140 +97,102 @@ def kakao_auth(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def apple_auth(request):
-    identity_token = request.data.get('identityToken')
     authorization_code = request.data.get('authorizationCode')
-
-    if not identity_token or not authorization_code:
-        return JsonResponse({'error': 'Identity token and authorization code are required'}, status=400)
-
+    
+    if not authorization_code:
+        return JsonResponse({'error': 'Authorization code is required'}, status=400, json_dumps_params={'ensure_ascii': False})
+    
     try:
-        # 애플 API로 사용자 정보 가져오기
-        apple_user_info_url = 'https://appleid.apple.com/auth/token'
-        client_secret = get_apple_client_secret()  # 여기에서 client_secret 생성
-
-        response = requests.post(apple_user_info_url, data={
-            'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
-            'client_secret': client_secret,  # 생성된 client_secret 사용
-            'code': authorization_code,
+        # 애플 토큰 엔드포인트로 토큰 요청
+        token_url = 'https://appleid.apple.com/auth/token'
+        client_id = config('APPLE_CLIENT_ID')
+        team_id = config('APPLE_TEAM_ID')
+        key_id = config('APPLE_KEY_ID')
+        private_key = config('APPLE_PRIVATE_KEY').replace('\\n', '\n')  # 환경 변수에서 줄바꿈 처리
+        
+        # JWT 형식의 client_secret 생성
+        headers = {
+            'alg': 'ES256',
+            'kid': key_id,
+        }
+        payload = {
+            'iss': team_id,
+            'iat': int(time.time()),
+            'exp': int(time.time()) + 1800,  # 30분 유효
+            'aud': 'https://appleid.apple.com',
+            'sub': client_id,
+        }
+        
+        client_secret = jwt.encode(payload, private_key, algorithm='ES256', headers=headers)
+        
+        data = {
             'grant_type': 'authorization_code',
-        })
-
-        response.raise_for_status()
-        user_info = response.json()
-
-        appleId = user_info.get('sub')  # Apple user ID
-        if not appleId:
-            return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=400)
-
-        # 사용자 처리 로직 (이미 있는지 확인하거나, 신규 유저 생성 등)
-        unique_username = f'apple_{appleId}'
-
-        with transaction.atomic():
-            user, created = User.all_objects.get_or_create(
-                appleId=appleId,
-                defaults={
-                    'username': unique_username,
-                    'nickname': None,
-                    'email': None,
-                    'birth': None,
-                    'sex': None,
-                }
-            )
-
-            if created or user.deleted_at is not None:
-                user.deleted_at = None
-                user.set_unusable_password()
-                user.save()
-
-                # 기존 Memories 객체 삭제 (소프트 삭제 포함)
-                Memories.all_objects.filter(userId=user).delete()
-
-                # 새로운 빈 Memories 객체 생성
-                Memories.objects.create(userId=user, items=[])
-
-            needs_signup = False
-            if created or not user.nickname:
-                needs_signup = True
-
-            tokens = get_tokens_for_user(user)
-
-        return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
-
-    except requests.exceptions.RequestException:
-        return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=500)
-    except IntegrityError:
-        return JsonResponse({'error': 'Username already exists'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def apple_callback(request):
-    identity_token = request.data.get('identityToken')
-    authorization_code = request.data.get('authorizationCode')
-
-    if not identity_token or not authorization_code:
-        return JsonResponse({'error': 'Identity token and authorization code are required'}, status=400)
-
-    try:
-        # 애플 API로 사용자 정보 가져오기
-        apple_user_info_url = 'https://appleid.apple.com/auth/token'
-        client_secret = get_apple_client_secret()  # 여기에서 client_secret 생성
-
-        response = requests.post(apple_user_info_url, data={
-            'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
+            'code': authorization_code,
+            'redirect_uri': config('APPLE_REDIRECT_URI'),
+            'client_id': client_id,
             'client_secret': client_secret,
-            'code': authorization_code,
-            'grant_type': 'authorization_code',
-        })
-
-        response.raise_for_status()
-        user_info = response.json()
-
-        appleId = user_info.get('sub')  # Apple user ID
-        if not appleId:
-            return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=400)
-
-        # 사용자 처리 로직
-        unique_username = f'apple_{appleId}'
-
-        with transaction.atomic():
+        }
+        
+        token_response = requests.post(token_url, data=data)
+        token_response.raise_for_status()
+        tokens = token_response.json()
+        
+        id_token = tokens.get('id_token')
+        if not id_token:
+            return JsonResponse({'error': 'Failed to retrieve ID token from Apple'}, status=400, json_dumps_params={'ensure_ascii': False})
+        
+        # ID 토큰 디코딩
+        decoded_id_token = jwt.decode(id_token, options={"verify_signature": False})  # 실제 구현 시 서명 검증 필요
+        
+        apple_user_id = decoded_id_token.get('sub')
+        email = decoded_id_token.get('email', '')
+        if not apple_user_id:
+            return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=400, json_dumps_params={'ensure_ascii': False})
+        
+        unique_username = f'apple_{apple_user_id}'
+        
+        with transaction.atomic():  # 트랜잭션 시작
             user, created = User.all_objects.get_or_create(
-                appleId=appleId,
+                appleId=apple_user_id,
                 defaults={
                     'username': unique_username,
                     'nickname': None,
-                    'email': None,
+                    'email': email if email else None,
                     'birth': None,
                     'sex': None,
                 }
             )
-
+            
             if created or user.deleted_at is not None:
                 user.deleted_at = None
                 user.set_unusable_password()
                 user.save()
-
+                
                 # 기존 Memories 객체 삭제 (소프트 삭제 포함)
                 Memories.all_objects.filter(userId=user).delete()
-
+                
                 # 새로운 빈 Memories 객체 생성
                 Memories.objects.create(userId=user, items=[])
-
+            
             needs_signup = False
             if created or not user.nickname:
                 needs_signup = True
-
-            tokens = get_tokens_for_user(user)
-
-        return Response({'tokens': tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
-
+            
+            jwt_tokens = get_tokens_for_user(user)
+        
+        return Response({'tokens': jwt_tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
+    
     except requests.exceptions.RequestException:
-        return JsonResponse({'error': 'Failed to retrieve user info from Apple'}, status=500)
+        return JsonResponse({'error': 'Failed to retrieve tokens from Apple'}, status=500, json_dumps_params={'ensure_ascii': False})
+    except jwt.ExpiredSignatureError:
+        return JsonResponse({'error': 'ID token has expired'}, status=400, json_dumps_params={'ensure_ascii': False})
+    except jwt.JWTError as e:
+        return JsonResponse({'error': f'JWT decoding error: {str(e)}'}, status=400, json_dumps_params={'ensure_ascii': False})
     except IntegrityError:
-        return JsonResponse({'error': 'Username already exists'}, status=400)
+        return JsonResponse({'error': 'Username already exists'}, status=400, json_dumps_params={'ensure_ascii': False})
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=500, json_dumps_params={'ensure_ascii': False})
+    
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
