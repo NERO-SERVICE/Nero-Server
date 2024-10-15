@@ -14,6 +14,7 @@ from pathlib import Path
 from decouple import config
 import os
 from datetime import timedelta
+import jwt
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -142,10 +143,10 @@ SOCIALACCOUNT_PROVIDERS = {
             'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
             'team_id': config('SOCIAL_AUTH_APPLE_TEAM_ID'),
             'key_id': config('SOCIAL_AUTH_APPLE_KEY_ID'),
-        },
-        'SCOPE': ['name', 'email'],
-        'AUTH_PARAMS': {'response_mode': 'form_post'},
-    }
+            'private_key': config('SOCIAL_AUTH_APPLE_PRIVATE_KEY'),
+            'redirect_uri': config('SOCIAL_AUTH_APPLE_REDIRECT_URI'),
+        }
+    },
 }
 
 AUTHENTICATION_BACKENDS = (

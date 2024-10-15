@@ -2,9 +2,7 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 import requests
 from django.contrib.auth import get_user_model
-from decouple import config
-import jwt
-import time
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 User = get_user_model()
 
@@ -36,72 +34,10 @@ class KakaoAuthentication(BaseAuthentication):
         return (user, None)
     
 
-class AppleAuthentication(BaseAuthentication):
-    def authenticate(self, request):
-        identity_token = request.data.get('identityToken')
-        authorization_code = request.data.get('authorizationCode')
-
-        if not identity_token or not authorization_code:
-            return None
-
-        try:
-            # 애플 API로 사용자 정보 가져오기
-            apple_user_info_url = 'https://appleid.apple.com/auth/token'
-            client_secret = get_apple_client_secret()  # client_secret 생성
-
-            response = requests.post(apple_user_info_url, data={
-                'client_id': config('SOCIAL_AUTH_APPLE_CLIENT_ID'),
-                'client_secret': client_secret,
-                'code': authorization_code,
-                'grant_type': 'authorization_code',
-            })
-
-            if response.status_code != 200:
-                raise AuthenticationFailed('Invalid Apple authorization code')
-
-            data = response.json()
-            apple_id = data.get('sub')
-
-            if not apple_id:
-                raise AuthenticationFailed('Failed to retrieve Apple user ID')
-
-            try:
-                user = User.objects.get(appleId=apple_id)
-            except User.DoesNotExist:
-                raise AuthenticationFailed('User does not exist')
-
-            return (user, None)
-
-        except requests.exceptions.RequestException:
-            raise AuthenticationFailed('Failed to retrieve user info from Apple')
-
-
-def get_apple_client_secret():
-    # 환경 변수에서 값 불러오기
-    team_id = config('SOCIAL_AUTH_APPLE_TEAM_ID')
-    client_id = config('SOCIAL_AUTH_APPLE_CLIENT_ID')
-    key_id = config('SOCIAL_AUTH_APPLE_KEY_ID')
-    private_key = config('SOCIAL_AUTH_APPLE_PRIVATE_KEY').replace('\\n', '\n')  # 줄바꿈 문자 처리
-
-    # JWT 페이로드 생성
-    current_time = int(time.time())
-    payload = {
-        'iss': team_id,
-        'iat': current_time,
-        'exp': current_time + 15777000,  # 6개월 후 만료 (15777000초)
-        'aud': 'https://appleid.apple.com',
-        'sub': client_id,
-    }
-
-    # JWT 토큰 서명 (ES256 알고리즘 사용)
-    client_secret = jwt.encode(
-        payload,
-        private_key,
-        algorithm='ES256',
-        headers={
-            'kid': key_id,
-            'alg': 'ES256',
-        }
-    )
-
-    return client_secret
+class AppleAuthentication(JWTAuthentication):
+    """
+    Apple 로그인용 커스텀 JWT 인증 클래스.
+    필요에 따라 추가적인 인증 로직을 구현할 수 있습니다.
+    현재는 기본 JWTAuthentication을 상속받아 사용합니다.
+    """
+    pass
