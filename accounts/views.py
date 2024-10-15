@@ -128,7 +128,7 @@ def apple_auth(request):
         data = {
             'grant_type': 'authorization_code',
             'code': authorization_code,
-            'redirect_uri': config('APPLE_REDIRECT_URI'),
+            'redirect_uri': config('SOCIAL_AUTH_APPLE_REDIRECT_URI'),
             'client_id': client_id,
             'client_secret': client_secret,
         }
