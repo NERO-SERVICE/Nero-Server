@@ -182,8 +182,8 @@ def apple_auth(request):
         
         return Response({'tokens': jwt_tokens, 'needsSignup': needs_signup}, status=status.HTTP_200_OK)
     
-    except requests.exceptions.RequestException:
-        return JsonResponse({'error': 'Failed to retrieve tokens from Apple'}, status=500, json_dumps_params={'ensure_ascii': False})
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({'error': f'Failed to retrieve tokens from Apple: {str(e)}'}, status=500, json_dumps_params={'ensure_ascii': False})
     except jwt.ExpiredSignatureError:
         return JsonResponse({'error': 'ID token has expired'}, status=400, json_dumps_params={'ensure_ascii': False})
     except jwt.PyJWTError as e:
