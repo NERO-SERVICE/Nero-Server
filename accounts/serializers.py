@@ -17,3 +17,8 @@ class MemoriesSerializer(serializers.ModelSerializer):
         model = Memories
         fields = ['memoryId', 'userId', 'items', 'deletedAt']
         read_only_fields = ['memoryId', 'userId', 'deletedAt']
+
+class MypageInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['nickname']
