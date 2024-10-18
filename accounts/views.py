@@ -11,7 +11,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import User, Memories
-from .serializers import UserSerializer, MemoriesSerializer
+from .serializers import UserSerializer, MemoriesSerializer, MypageInfoSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
@@ -204,6 +204,19 @@ def userinfo(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
+    
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+def mypage_userinfo(request):
+    try:
+        user = request.user
+        serializer = MypageInfoSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
+
 
 
 @api_view(['PATCH'])
