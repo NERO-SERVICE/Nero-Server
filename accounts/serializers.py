@@ -22,3 +22,8 @@ class MypageInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['nickname']
+        
+class UserProfileUpdateInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['nickname', 'email', 'birth', 'sex']
