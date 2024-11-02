@@ -7,15 +7,13 @@ from django.db import IntegrityError
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import User, Memories
-from .serializers import UserSerializer, MemoriesSerializer, MypageInfoSerializer
+from .serializers import UserSerializer, MemoriesSerializer, MypageInfoSerializer, UserProfileUpdateInfoSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
-from datetime import datetime
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
 from django.db import transaction
 from decouple import config
@@ -225,27 +223,12 @@ def mypage_userinfo(request):
 def update_user_info(request):
     try:
         user = request.user
-        nickname = request.data.get('nickname')
-        email = request.data.get('email')
-        birth = request.data.get('birth')
-        sex = request.data.get('sex')
+        serializer = UserProfileUpdateInfoSerializer(user, data=request.data, partial=True)
 
-        if nickname:
-            user.nickname = nickname
-        if email:
-            user.email = email
-
-        if birth:
-            try:
-                user.birth = datetime.fromisoformat(birth).date()
-            except ValueError:
-                return JsonResponse({'error': 'Invalid date format'}, status=400)
-
-        if sex:
-            user.sex = sex
-
-        user.save()
-        return Response({'message': 'User information updated successfully'}, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'User information updated successfully'}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
