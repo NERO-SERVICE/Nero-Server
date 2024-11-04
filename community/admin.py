@@ -1,14 +1,28 @@
+
 from django.contrib import admin
-from .models import Post, Comment
+from .models import Post, Comment, PostImage
 
-@admin.register(Post)
+class PostImageInline(admin.TabularInline):
+    model = PostImage
+    extra = 1
+
 class PostAdmin(admin.ModelAdmin):
-    list_display = ('post_id', 'user', 'created_at', 'updated_at', 'deleted_at')
-    search_fields = ('content', 'user__nickname')
-    list_filter = ('created_at', 'updated_at')
+    list_display = ('post_id_display', 'user', 'content', 'created_at', 'updated_at', 'get_likes_count', 'get_comments_count')
+    inlines = [PostImageInline]
+    readonly_fields = ('get_likes_count', 'get_comments_count')
 
-@admin.register(Comment)
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('comment_id', 'post', 'user', 'created_at', 'updated_at', 'deleted_at')
-    search_fields = ('content', 'user__nickname', 'post__content')
-    list_filter = ('created_at', 'updated_at')
+    def post_id_display(self, obj):
+        return obj.post_id
+    post_id_display.short_description = 'Post ID'
+
+    def get_likes_count(self, obj):
+        return obj.likes.count()
+    get_likes_count.short_description = 'Likes Count'
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+    get_comments_count.short_description = 'Comments Count'
+
+admin.site.register(Post, PostAdmin)
+admin.site.register(Comment)
+admin.site.register(PostImage)
