@@ -12,7 +12,15 @@ class MenstruationListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Menstruation.objects.filter(owner=self.request.user)
+        user = self.request.user
+        year = self.request.query_params.get('year')
+        if year:
+            try:
+                year = int(year)
+                return Menstruation.objects.filter(owner=user, startDate__year=year)
+            except ValueError:
+                return Menstruation.objects.none()
+        return Menstruation.objects.filter(owner=user)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
