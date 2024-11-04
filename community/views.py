@@ -36,11 +36,12 @@ class PostCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        post = serializer.save(user=request.user)
+        post = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         post_serializer = PostSerializer(post, context={'request': request})
         response_data = post_serializer.data
         return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 # 게시물 상세 조회, 수정, 삭제
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
