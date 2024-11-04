@@ -27,7 +27,7 @@ class PostImage(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        return f"Image for Post {self.post.id}"
+        return f"Image for Post {self.post.post_id}"
 
 
 class Comment(SoftDeletableModel):
