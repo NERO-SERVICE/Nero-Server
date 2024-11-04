@@ -1,12 +1,14 @@
 from django.db import models
 from django.utils import timezone
 from accounts.models import SoftDeletableModel, User
+from django.db import models
+from django.utils import timezone
+from accounts.models import SoftDeletableModel, User
 
 class Post(SoftDeletableModel):
     post_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
-    thumbnail = models.ImageField(upload_to='post_thumbnails/', null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
@@ -16,7 +18,17 @@ class Post(SoftDeletableModel):
         verbose_name_plural = "게시물"
 
     def __str__(self):
-        return f"Post {self.post_id} by {self.user.nickname}"
+        return f"Post {self.id} by {self.user.nickname}"
+
+
+class PostImage(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='post_images/')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Image for Post {self.post.id}"
+
 
 class Comment(SoftDeletableModel):
     comment_id = models.AutoField(primary_key=True)
