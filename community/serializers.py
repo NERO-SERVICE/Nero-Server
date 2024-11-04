@@ -30,11 +30,24 @@ class PostSerializer(serializers.ModelSerializer):
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
     images = PostImageSerializer(many=True, read_only=True)
+    isLiked = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
-        fields = ['post_id', 'user', 'content', 'created_at', 'updated_at', 'likes_count', 'comments_count', 'comments', 'images']
-        read_only_fields = ['post_id', 'user', 'created_at', 'updated_at', 'likes_count', 'comments_count', 'comments', 'images']
+        fields = [
+            'post_id', 'user', 'content', 'created_at', 'updated_at',
+            'likes_count', 'comments_count', 'comments', 'images', 'isLiked'
+        ]
+        read_only_fields = [
+            'post_id', 'user', 'created_at', 'updated_at',
+            'likes_count', 'comments_count', 'comments', 'images', 'isLiked'
+        ]
+
+    def get_isLiked(self, obj):
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(pk=request.user.pk).exists()
+        return False
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
