@@ -18,7 +18,7 @@ class Post(SoftDeletableModel):
         verbose_name_plural = "게시물"
 
     def __str__(self):
-        return f"Post {self.id} by {self.user.nickname}"
+        return f"Post {self.post_id} by {self.user.nickname}"
 
 
 class PostImage(models.Model):

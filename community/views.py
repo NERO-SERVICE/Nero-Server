@@ -73,6 +73,14 @@ class CommentCreateView(generics.CreateAPIView):
         post = get_object_or_404(Post, post_id=post_id, deleted_at__isnull=True)
         serializer.save(user=self.request.user, post=post)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        comment = self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        comment_serializer = CommentSerializer(comment, context={'request': request})
+        return Response(comment_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 # 댓글 리스트
 class CommentListView(generics.ListAPIView):
     serializer_class = CommentSerializer
