@@ -48,7 +48,7 @@ urlpatterns = [
     path('api/v1/menstruation/', include('menstruation.urls')),
     path('api/v1/mail/', include('mail.urls')),
     path('api/v1/information/', include('information.urls')),
-    # path('api/v1/community/', include('community.urls')),
+    path('api/v1/community/', include('community.urls')),
     
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
