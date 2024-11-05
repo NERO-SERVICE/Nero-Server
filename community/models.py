@@ -1,11 +1,8 @@
 from django.db import models
 from django.utils import timezone
-from accounts.models import SoftDeletableModel, User
-from django.db import models
-from django.utils import timezone
-from accounts.models import SoftDeletableModel, User
+from accounts.models import User
 
-class Post(SoftDeletableModel):
+class Post(models.Model):
     post_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     content = models.TextField()
@@ -30,7 +27,7 @@ class PostImage(models.Model):
         return f"Image for Post {self.post.post_id}"
 
 
-class Comment(SoftDeletableModel):
+class Comment(models.Model):
     comment_id = models.AutoField(primary_key=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')

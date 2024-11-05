@@ -7,13 +7,13 @@ from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10  # 기본 페이지 크기
+    page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 200
 
 # 메인 페이지: 게시물 리스트
 class PostListView(generics.ListAPIView):
-    queryset = Post.objects.filter(deleted_at__isnull=True).order_by('-created_at')
+    queryset = Post.objects.all().order_by('-created_at')
     serializer_class = PostSerializer
     permission_classes = [permissions.AllowAny]
     pagination_class = StandardResultsSetPagination
@@ -39,19 +39,17 @@ class PostCreateView(generics.CreateAPIView):
         post = self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         post_serializer = PostSerializer(post, context={'request': request})
-        response_data = post_serializer.data
-        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(post_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 # 게시물 상세 조회, 수정, 삭제
 class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Post.objects.filter(deleted_at__isnull=True)
+    queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_object(self):
-        post = get_object_or_404(Post, post_id=self.kwargs['post_id'], deleted_at__isnull=True)
-        return post
+        return get_object_or_404(Post, post_id=self.kwargs['post_id'])
 
     def perform_update(self, serializer):
         post = self.get_object()
@@ -62,7 +60,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         if self.request.user != instance.user:
             raise permissions.PermissionDenied("삭제 권한이 없습니다.")
-        instance.soft_delete()
+        instance.delete()  # 실제 삭제
 
 # 댓글 작성
 class CommentCreateView(generics.CreateAPIView):
@@ -71,7 +69,7 @@ class CommentCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get('post_id')
-        post = get_object_or_404(Post, post_id=post_id, deleted_at__isnull=True)
+        post = get_object_or_404(Post, post_id=post_id)
         serializer.save(user=self.request.user, post=post)
 
     def create(self, request, *args, **kwargs):
@@ -90,17 +88,16 @@ class CommentListView(generics.ListAPIView):
 
     def get_queryset(self):
         post_id = self.kwargs.get('post_id')
-        return Comment.objects.filter(post__post_id=post_id, deleted_at__isnull=True).order_by('-created_at')
+        return Comment.objects.filter(post__post_id=post_id).order_by('-created_at')
 
 # 댓글 상세 조회, 수정, 삭제
 class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Comment.objects.filter(deleted_at__isnull=True)
+    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_object(self):
-        comment = get_object_or_404(Comment, comment_id=self.kwargs['comment_id'], deleted_at__isnull=True)
-        return comment
+        return get_object_or_404(Comment, comment_id=self.kwargs['comment_id'])
 
     def perform_update(self, serializer):
         comment = self.get_object()
@@ -111,14 +108,14 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         if self.request.user != instance.user:
             raise permissions.PermissionDenied("삭제 권한이 없습니다.")
-        instance.soft_delete()
+        instance.delete()  # 실제 삭제
 
 # 좋아요 기능
 class LikePostView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, post_id):
-        post = get_object_or_404(Post, post_id=post_id, deleted_at__isnull=True)
+        post = get_object_or_404(Post, post_id=post_id)
         if request.user in post.likes.all():
             post.likes.remove(request.user)
             return Response({'message': '좋아요 취소'}, status=status.HTTP_200_OK)
@@ -130,7 +127,7 @@ class LikeCommentView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, comment_id):
-        comment = get_object_or_404(Comment, comment_id=comment_id, deleted_at__isnull=True)
+        comment = get_object_or_404(Comment, comment_id=comment_id)
         if request.user in comment.likes.all():
             comment.likes.remove(request.user)
             return Response({'message': '좋아요 취소'}, status=status.HTTP_200_OK)
