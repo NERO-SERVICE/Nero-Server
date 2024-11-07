@@ -2,6 +2,9 @@ from django.db import models
 from django.utils import timezone
 from django.db.models import JSONField
 from django.contrib.auth.models import AbstractUser, UserManager
+from PIL import Image, ImageOps
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class SoftDeleteManager(UserManager):
     def get_queryset(self):
@@ -34,6 +37,27 @@ class User(AbstractUser, SoftDeletableModel):
     class Meta:
         verbose_name = "유저관리"
         verbose_name_plural = "유저관리"
+        
+class ProfileImage(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile_image')
+    image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.image:
+            try:
+                img = Image.open(self.image.path)
+                img = ImageOps.exif_transpose(img)  # EXIF 데이터 기반 회전 처리
+                max_size = (300, 300)
+                img.thumbnail(max_size, Image.LANCZOS)
+                img.save(self.image.path)
+            except Exception as e:
+                print(f"Error processing profile image: {e}")
+
+@receiver(post_save, sender=User)
+def create_user_profile_image(sender, instance, created, **kwargs):
+    if created:
+        ProfileImage.objects.create(user=instance)
 
 class Memories(SoftDeletableModel):
     memoryId = models.AutoField(primary_key=True)
