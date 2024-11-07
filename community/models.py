@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from accounts.models import User
-from PIL import Image
+from PIL import Image, ImageOps
 import os
 
 class Post(models.Model):
@@ -29,11 +29,12 @@ class PostImage(models.Model):
         super().save(*args, **kwargs)
 
         img = Image.open(self.image.path)
+        img = ImageOps.exif_transpose(img)
         max_size = (600, 600)
         img = img.resize(max_size, Image.LANCZOS)  # LANCZOS 필터로 고품질 리사이징
 
         # 초기 압축 품질 설정
-        quality = 85
+        quality = 90
         img_format = 'JPEG'
         
         # 이미지가 1MB 이하가 될 때까지 품질을 조정하면서 저장
