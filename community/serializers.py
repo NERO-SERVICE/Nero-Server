@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Post, PostImage, Comment
-from accounts.serializers import UserSerializer
+from accounts.serializers import UserProfileSerializer
 
 class PostImageSerializer(serializers.ModelSerializer):
     image = serializers.ImageField()
@@ -10,7 +10,7 @@ class PostImageSerializer(serializers.ModelSerializer):
         fields = ['image']
 
 class CommentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    user = UserProfileSerializer(read_only=True)
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
     
     class Meta:
@@ -25,7 +25,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         
 class PostSerializer(serializers.ModelSerializer):
     post_id = serializers.IntegerField(read_only=True)
-    user = UserSerializer(read_only=True)
+    user = UserProfileSerializer(read_only=True)
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
     comments_count = serializers.IntegerField(source='comments.count', read_only=True)
     comments = CommentSerializer(many=True, read_only=True)
