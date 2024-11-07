@@ -25,6 +25,11 @@ class PostListView(generics.ListAPIView):
             queryset = queryset.filter(content__icontains=search_query)
         return queryset
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
 # 게시물 작성
 class PostCreateView(generics.CreateAPIView):
     serializer_class = PostCreateSerializer
@@ -51,6 +56,11 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_object(self):
         return get_object_or_404(Post, post_id=self.kwargs['post_id'])
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
     def perform_update(self, serializer):
         post = self.get_object()
         if self.request.user != post.user:
@@ -61,6 +71,7 @@ class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.user != instance.user:
             raise permissions.PermissionDenied("삭제 권한이 없습니다.")
         instance.delete()  # 실제 삭제
+
 
 # 댓글 작성
 class CommentCreateView(generics.CreateAPIView):
