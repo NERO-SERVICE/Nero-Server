@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.db.models import JSONField
 from django.contrib.auth.models import AbstractUser, UserManager
+from PIL import Image
 
 class SoftDeleteManager(UserManager):
     def get_queryset(self):
@@ -27,6 +28,7 @@ class User(AbstractUser, SoftDeletableModel):
     birth = models.DateField(null=True, blank=True)
     sex = models.CharField(max_length=10, null=True, blank=True)
     is_product_writer = models.BooleanField(default=False)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
 
     objects = SoftDeleteManager()  # SoftDeleteManager를 기본 매니저로 사용
     all_objects = models.Manager()  # 모든 객체를 관리하는 기본 매니저
@@ -34,6 +36,18 @@ class User(AbstractUser, SoftDeletableModel):
     class Meta:
         verbose_name = "유저관리"
         verbose_name_plural = "유저관리"
+
+    def __str__(self):
+        return self.username
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if self.profile_image:
+            img = Image.open(self.profile_image.path)
+            max_size = (300, 300)
+            img.thumbnail(max_size, Image.ANTIALIAS)
+            img.save(self.profile_image.path)
 
 class Memories(SoftDeletableModel):
     memoryId = models.AutoField(primary_key=True)

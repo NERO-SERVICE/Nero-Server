@@ -4,10 +4,14 @@ from .models import User, Memories
 class UserSerializer(serializers.ModelSerializer):
     userId = serializers.CharField(max_length=255, source='id')
     deletedAt = serializers.DateTimeField(source='deleted_at', read_only=True) 
+    profile_image = serializers.ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
-        fields = ['userId', 'kakaoId', 'appleId', 'createdAt', 'nickname', 'email', 'birth', 'sex', 'deletedAt']
+        fields = [
+            'userId', 'kakaoId', 'appleId', 'createdAt', 'nickname',
+            'email', 'birth', 'sex', 'deletedAt', 'profile_image'
+        ]
         read_only_fields = ['userId', 'deletedAt']
 
 class MemoriesSerializer(serializers.ModelSerializer):
@@ -19,6 +23,8 @@ class MemoriesSerializer(serializers.ModelSerializer):
         read_only_fields = ['memoryId', 'userId', 'deletedAt']
         
 class UserProfileUpdateInfoSerializer(serializers.ModelSerializer):
+    profile_image = serializers.ImageField(required=False, allow_null=True)
+
     class Meta:
         model = User
-        fields = ['nickname', 'email', 'birth', 'sex']
+        fields = ['nickname', 'email', 'birth', 'sex', 'profile_image']
