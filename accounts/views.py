@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from .models import User, Memories
-from .serializers import UserSerializer, MemoriesSerializer, UserProfileUpdateInfoSerializer
+from .serializers import UserSerializer, MemoriesSerializer, UserProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404
@@ -196,9 +196,12 @@ def apple_auth(request):
 @permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
 def userinfo(request):
+    """
+    profile_image 제외 사용자 정보 조회
+    """
     try:
         user = request.user
-        serializer = UserSerializer(user)
+        serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
@@ -208,9 +211,12 @@ def userinfo(request):
 @permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
 def mypage_userinfo(request):
+    """
+    사용자 프로필 정보를 조회 (profile_image 포함)
+    """
     try:
         user = request.user
-        serializer = UserProfileUpdateInfoSerializer(user)
+        serializer = UserProfileSerializer(user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404, json_dumps_params={'ensure_ascii': False})
@@ -220,14 +226,12 @@ def mypage_userinfo(request):
 @permission_classes([IsAuthenticated])
 @authentication_classes([JWTAuthentication])
 def update_user_info(request):
+    """
+    사용자 프로필 정보를 업데이트합니다. (프로필 이미지 포함)
+    """
     try:
         user = request.user
-        serializer = UserProfileUpdateInfoSerializer(
-            user, 
-            data=request.data, 
-            partial=True,
-            context={'request': request}
-        )
+        serializer = UserProfileSerializer(user, data=request.data, partial=True, context={'request': request})
 
         if serializer.is_valid():
             serializer.save()
@@ -238,6 +242,7 @@ def update_user_info(request):
         return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @api_view(['DELETE'])
