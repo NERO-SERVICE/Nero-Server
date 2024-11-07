@@ -1,10 +1,15 @@
 from django.contrib import admin
 from .models import User, Memories
 from django.utils import timezone
+from django.utils.html import format_html
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['id', 'kakaoId', 'appleId', 'nickname', 'email', 'createdAt', 'birth', 'sex', 'is_product_writer', 'deleted_at']
+    list_display = [
+        'id', 'kakaoId', 'appleId', 'nickname', 'email', 
+        'createdAt', 'birth', 'sex', 'is_product_writer', 
+        'deleted_at', 'profile_image'
+    ]
     search_fields = ['nickname', 'email']
     readonly_fields = ['id', 'createdAt']
     list_filter = ['deleted_at', 'is_product_writer']
@@ -25,8 +30,16 @@ class UserAdmin(admin.ModelAdmin):
     
     def get_readonly_fields(self, request, obj=None):
         if obj and obj.deleted_at:
-            return self.readonly_fields + ['nickname', 'email', 'sex', 'birth']
+            return self.readonly_fields + ['nickname', 'email', 'sex', 'birth', 'profile_image']
         return self.readonly_fields
+
+    def profile_image_preview(self, obj):
+        if obj.profile_image:
+            return format_html('<img src="{}" width="50" height="50" />', obj.profile_image.url)
+        return "No Image"
+    profile_image_preview.short_description = 'Profile Image Preview'
+    
+    list_display += ('profile_image_preview',)
     
 
 @admin.register(Memories)
