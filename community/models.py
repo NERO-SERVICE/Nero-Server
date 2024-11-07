@@ -30,20 +30,28 @@ class PostImage(models.Model):
 
         img = Image.open(self.image.path)
         img = ImageOps.exif_transpose(img)
-        max_size = (600, 600)
-        img = img.resize(max_size, Image.LANCZOS)  # LANCZOS 필터로 고품질 리사이징
+        target_size = 800
+        img.thumbnail((target_size, target_size), Image.LANCZOS)  # 비율 유지하며 축소
+
+        # 이미지가 800x800이 아닌 경우 중앙에서 800x800으로 잘라냄
+        width, height = img.size
+        left = (width - target_size) / 2
+        top = (height - target_size) / 2
+        right = (width + target_size) / 2
+        bottom = (height + target_size) / 2
+        img = img.crop((left, top, right, bottom))
 
         # 초기 압축 품질 설정
         quality = 90
         img_format = 'JPEG'
         
-        # 이미지가 1MB 이하가 될 때까지 품질을 조정하면서 저장
+        # 1MB 이하가 될 때까지 품질을 조정하면서 저장
         while True:
             img.save(self.image.path, format=img_format, quality=quality)
             if os.path.getsize(self.image.path) <= 1 * 1024 * 1024:  # 1MB 이하인지 확인
                 break
             quality -= 5  # 품질을 5씩 낮춤
-            if quality < 10:  # 최소 품질 제한 (10 이하로 떨어지지 않도록)
+            if quality < 10:  # 최소 품질 제한
                 break
 
     def __str__(self):
