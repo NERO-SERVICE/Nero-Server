@@ -222,12 +222,7 @@ def mypage_userinfo(request):
 def update_user_info(request):
     try:
         user = request.user
-        serializer = UserProfileUpdateInfoSerializer(
-            user, 
-            data=request.data, 
-            partial=True,
-            context={'request': request}
-        )
+        serializer = UserProfileUpdateInfoSerializer(user, data=request.data, partial=True)
 
         if serializer.is_valid():
             serializer.save()
@@ -237,7 +232,7 @@ def update_user_info(request):
     except User.DoesNotExist:
         return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 @api_view(['DELETE'])
