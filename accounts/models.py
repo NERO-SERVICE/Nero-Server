@@ -46,7 +46,7 @@ class User(AbstractUser, SoftDeletableModel):
         if self.profile_image:
             img = Image.open(self.profile_image.path)
             max_size = (300, 300)
-            img.thumbnail(max_size, Image.ANTIALIAS)
+            img.thumbnail(max_size, Image.LANCZOS)
             img.save(self.profile_image.path)
 
 class Memories(SoftDeletableModel):
