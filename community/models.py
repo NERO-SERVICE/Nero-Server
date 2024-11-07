@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from accounts.models import User
 from PIL import Image
+import os
 
 class Post(models.Model):
     post_id = models.AutoField(primary_key=True)
@@ -27,13 +28,22 @@ class PostImage(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        # 이미지 리사이징 및 압축
         img = Image.open(self.image.path)
         max_size = (600, 600)
-        img.thumbnail(max_size, Image.ANTIALIAS)
+        img = img.resize(max_size, Image.LANCZOS)  # LANCZOS 필터로 고품질 리사이징
 
-        # 압축 품질을 85로 설정하여 이미지 저장
-        img.save(self.image.path, format='JPEG', quality=85)
+        # 초기 압축 품질 설정
+        quality = 85
+        img_format = 'JPEG'
+        
+        # 이미지가 1MB 이하가 될 때까지 품질을 조정하면서 저장
+        while True:
+            img.save(self.image.path, format=img_format, quality=quality)
+            if os.path.getsize(self.image.path) <= 1 * 1024 * 1024:  # 1MB 이하인지 확인
+                break
+            quality -= 5  # 품질을 5씩 낮춤
+            if quality < 10:  # 최소 품질 제한 (10 이하로 떨어지지 않도록)
+                break
 
     def __str__(self):
         return f"Image for Post {self.post.post_id}"
