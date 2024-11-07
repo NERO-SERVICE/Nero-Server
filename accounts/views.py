@@ -9,7 +9,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from .models import User, Memories
+from .models import User, Memories, ProfileImage
 from .serializers import UserSerializer, MemoriesSerializer, UserProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -231,9 +231,19 @@ def update_user_info(request):
     """
     try:
         user = request.user
-        serializer = UserProfileSerializer(user, data=request.data, partial=True, context={'request': request})
+        serializer = UserProfileSerializer(
+            user, 
+            data=request.data, 
+            partial=True, 
+            context={'request': request}
+        )
 
         if serializer.is_valid():
+            # 파일이 포함된 경우 profile_image 필드로 전달
+            if 'profile_image' in request.FILES:
+                profile_image_instance, created = ProfileImage.objects.get_or_create(user=user)
+                profile_image_instance.image = request.FILES['profile_image']
+                profile_image_instance.save()
             serializer.save()
             return Response({'message': 'User information updated successfully'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
