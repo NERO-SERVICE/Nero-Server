@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.db.models import JSONField
 from django.contrib.auth.models import AbstractUser, UserManager
-from PIL import Image
+from PIL import Image, ImageOps
 
 class SoftDeleteManager(UserManager):
     def get_queryset(self):
@@ -45,6 +45,7 @@ class User(AbstractUser, SoftDeletableModel):
 
         if self.profile_image:
             img = Image.open(self.profile_image.path)
+            img = ImageOps.exif_transpose(img)  # EXIF 데이터 기반 회전 처리
             max_size = (300, 300)
             img.thumbnail(max_size, Image.LANCZOS)
             img.save(self.profile_image.path)
