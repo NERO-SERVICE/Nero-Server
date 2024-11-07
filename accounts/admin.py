@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Memories
+from .models import User, Memories, ProfileImage
 from django.utils import timezone
 
 @admin.register(User)
@@ -27,6 +27,15 @@ class UserAdmin(admin.ModelAdmin):
         if obj and obj.deleted_at:
             return self.readonly_fields + ['nickname', 'email', 'sex', 'birth']
         return self.readonly_fields
+    
+@admin.register(ProfileImage)
+class ProfileImageAdmin(admin.ModelAdmin):
+    list_display = ['user', 'image']
+    search_fields = ['user__nickname']
+    readonly_fields = ['user']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
     
 
 @admin.register(Memories)
