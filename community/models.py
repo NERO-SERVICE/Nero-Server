@@ -29,23 +29,33 @@ class PostImage(models.Model):
         super().save(*args, **kwargs)
 
         img = Image.open(self.image.path)
-        img = ImageOps.exif_transpose(img)
-        target_size = 800
-        img.thumbnail((target_size, target_size), Image.LANCZOS)  # 비율 유지하며 축소
-
-        # 이미지가 800x800이 아닌 경우 중앙에서 800x800으로 잘라냄
+        img = ImageOps.exif_transpose(img)  # 이미지 회전 정보 처리
+        
+        # 짧은 쪽을 기준으로 정사각형으로 중앙 크롭
         width, height = img.size
-        left = (width - target_size) / 2
-        top = (height - target_size) / 2
-        right = (width + target_size) / 2
-        bottom = (height + target_size) / 2
+        if width > height:
+            # 가로가 더 길 경우, 중앙에서 양쪽을 잘라 세로에 맞추어 정사각형으로 만듦
+            left = (width - height) / 2
+            top = 0
+            right = (width + height) / 2
+            bottom = height
+        else:
+            # 세로가 더 길 경우, 중앙에서 위아래를 잘라 가로에 맞추어 정사각형으로 만듦
+            left = 0
+            top = (height - width) / 2
+            right = width
+            bottom = (height + width) / 2
         img = img.crop((left, top, right, bottom))
+
+        # 크롭한 이미지를 800x800으로 리사이징
+        target_size = (800, 800)
+        img = img.resize(target_size, Image.LANCZOS)
 
         # 초기 압축 품질 설정
         quality = 90
         img_format = 'JPEG'
         
-        # 1MB 이하가 될 때까지 품질을 조정하면서 저장
+        # 이미지 용량이 1MB 이하가 될 때까지 품질을 조정하며 저장
         while True:
             img.save(self.image.path, format=img_format, quality=quality)
             if os.path.getsize(self.image.path) <= 1 * 1024 * 1024:  # 1MB 이하인지 확인
@@ -56,7 +66,6 @@ class PostImage(models.Model):
 
     def __str__(self):
         return f"Image for Post {self.post.post_id}"
-
 
 class Comment(models.Model):
     comment_id = models.AutoField(primary_key=True)
