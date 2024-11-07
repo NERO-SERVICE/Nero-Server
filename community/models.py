@@ -27,13 +27,13 @@ class PostImage(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        # 리사이징을 위한 이미지 열기
+        # 이미지 리사이징 및 압축
         img = Image.open(self.image.path)
-
-        # 리사이징 조건 설정 (최대 가로, 세로 크기 800px)
-        max_size = (800, 800)
+        max_size = (600, 600)
         img.thumbnail(max_size, Image.ANTIALIAS)
-        img.save(self.image.path)  # 리사이징된 이미지를 덮어쓰기
+
+        # 압축 품질을 85로 설정하여 이미지 저장
+        img.save(self.image.path, format='JPEG', quality=85)
 
     def __str__(self):
         return f"Image for Post {self.post.post_id}"
