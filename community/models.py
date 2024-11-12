@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from accounts.models import User
 from PIL import Image, ImageOps
+from django.contrib.postgres.indexes import GinIndex
 import os
 
 class Post(models.Model):
@@ -15,6 +16,9 @@ class Post(models.Model):
     class Meta:
         verbose_name = "게시물"
         verbose_name_plural = "게시물"
+        indexes = [
+            GinIndex(fields=['content']),  # 전체 텍스트 검색 인덱스
+        ]
 
     def __str__(self):
         return f"Post {self.post_id} by {self.user.nickname}"
