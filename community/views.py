@@ -11,7 +11,7 @@ from django.db.models import Q
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 200
+    max_page_size = 500
 
 # 메인 페이지: 게시물 리스트
 class PostListView(generics.ListAPIView):
