@@ -17,8 +17,9 @@ class Post(models.Model):
         verbose_name = "게시물"
         verbose_name_plural = "게시물"
         indexes = [
-            GinIndex(fields=['content']),  # 전체 텍스트 검색 인덱스
+            GinIndex(fields=['content'], name='content_gin_index', opclasses=['gin_trgm_ops']),
         ]
+
 
     def __str__(self):
         return f"Post {self.post_id} by {self.user.nickname}"
