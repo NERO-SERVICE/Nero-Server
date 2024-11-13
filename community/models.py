@@ -87,3 +87,43 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment {self.comment_id} by {self.user.nickname} on Post {self.post.post_id}"
+
+
+class Report(models.Model):
+    REPORT_CHOICES = [
+        ('post_report', '게시물 신고'),
+        ('post_block', '게시물 차단'),
+        ('author_report', '작성자 신고'),
+    ]
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports')
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='reports', null=True, blank=True)
+    report_type = models.CharField(max_length=20, choices=REPORT_CHOICES)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "신고"
+        verbose_name_plural = "신고"
+
+    def __str__(self):
+        return f"{self.report_type} by {self.reporter.nickname} on Post {self.post.post_id if self.post else 'N/A'}"
+    
+
+class CommentReport(models.Model):
+    REPORT_CHOICES = [
+        ('comment_report', '댓글 신고'),
+        ('comment_block', '댓글 차단'),
+        ('author_report', '작성자 신고'),
+    ]
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comment_reports')
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE, related_name='reports', null=True, blank=True)
+    report_type = models.CharField(max_length=20, choices=REPORT_CHOICES)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = "댓글 신고"
+        verbose_name_plural = "댓글 신고"
+
+    def __str__(self):
+        return f"{self.report_type} by {self.reporter.nickname} on Comment {self.comment.comment_id if self.comment else 'N/A'}"

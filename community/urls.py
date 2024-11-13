@@ -8,6 +8,8 @@ from .views import (
     CommentDetailView,
     LikePostView,
     LikeCommentView,
+    ReportCreateView,
+    CommentReportCreateView
 )
 
 app_name = 'community'
@@ -21,4 +23,6 @@ urlpatterns = [
     path('comments/<int:comment_id>/', CommentDetailView.as_view(), name='comment_detail'),
     path('posts/<int:post_id>/like/', LikePostView.as_view(), name='like_post'),
     path('comments/<int:comment_id>/like/', LikeCommentView.as_view(), name='like_comment'),
+    path('reports/create/', ReportCreateView.as_view(), name='report_create'),
+    path('comments/reports/create/', CommentReportCreateView.as_view(), name='comment_report_create'),
 ]

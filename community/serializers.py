@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Post, PostImage, Comment
+from .models import Post, PostImage, Comment, Report, CommentReport
 from accounts.serializers import UserProfileSerializer
 
 class PostImageSerializer(serializers.ModelSerializer):
@@ -67,3 +67,26 @@ class PostCreateSerializer(serializers.ModelSerializer):
         for image in images:
             PostImage.objects.create(post=post, image=image)
         return post
+    
+    
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = ['id', 'reporter', 'post', 'report_type', 'description', 'created_at']
+        read_only_fields = ['id', 'reporter', 'created_at']
+
+    def validate(self, data):
+        if 'report_type' not in data:
+            raise serializers.ValidationError("신고 유형을 선택해야 합니다.")
+        return data
+    
+class CommentReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CommentReport
+        fields = ['id', 'reporter', 'comment', 'report_type', 'description', 'created_at']
+        read_only_fields = ['id', 'reporter', 'created_at']
+
+    def validate(self, data):
+        if 'report_type' not in data:
+            raise serializers.ValidationError("신고 유형을 선택해야 합니다.")
+        return data
