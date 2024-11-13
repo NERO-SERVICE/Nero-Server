@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Post, Comment, PostImage
+from .models import Post, Comment, PostImage, Report, CommentReport
 
 class PostImageInline(admin.TabularInline):
     model = PostImage
@@ -23,6 +23,16 @@ class PostAdmin(admin.ModelAdmin):
         return obj.comments.count()
     get_comments_count.short_description = 'Comments Count'
 
+class ReportAdmin(admin.ModelAdmin):
+    list_display = ('report_type', 'reporter', 'post', 'description', 'created_at')
+    readonly_fields = ('reporter', 'created_at')
+
+class CommentReportAdmin(admin.ModelAdmin):
+    list_display = ('report_type', 'reporter', 'comment', 'description', 'created_at')
+    readonly_fields = ('reporter', 'created_at')
+
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comment)
 admin.site.register(PostImage)
+admin.site.register(Report, ReportAdmin)
+admin.site.register(CommentReport, CommentReportAdmin)

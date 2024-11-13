@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Post, Comment
-from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer
+from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer, ReportSerializer, CommentReportSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.contrib.postgres.search import SearchVector, SearchQuery
@@ -139,3 +139,21 @@ class LikeCommentView(APIView):
         else:
             comment.likes.add(request.user)
             return Response({'message': '좋아요'}, status=status.HTTP_200_OK)
+        
+class ReportCreateView(generics.CreateAPIView):
+    serializer_class = ReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        post_id = self.request.data.get('post_id')
+        post = get_object_or_404(Post, post_id=post_id) if post_id else None
+        serializer.save(reporter=self.request.user, post=post)
+        
+class CommentReportCreateView(generics.CreateAPIView):
+    serializer_class = CommentReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        comment_id = self.request.data.get('comment_id')
+        comment = get_object_or_404(Comment, comment_id=comment_id) if comment_id else None
+        serializer.save(reporter=self.request.user, comment=comment)
