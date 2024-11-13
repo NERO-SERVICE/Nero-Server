@@ -12,11 +12,18 @@ class PostImageSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     user = UserProfileSerializer(read_only=True)
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
-    
+    isLiked = serializers.SerializerMethodField()
+
     class Meta:
         model = Comment
-        fields = ['comment_id', 'user', 'content', 'created_at', 'updated_at', 'likes_count']
-        read_only_fields = ['comment_id', 'user', 'created_at', 'updated_at', 'likes_count']
+        fields = ['comment_id', 'user', 'content', 'created_at', 'updated_at', 'likes_count', 'isLiked']
+        read_only_fields = ['comment_id', 'user', 'created_at', 'updated_at', 'likes_count', 'isLiked']
+
+    def get_isLiked(self, obj):
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(pk=request.user.pk).exists()
+        return False
         
 class CommentCreateSerializer(serializers.ModelSerializer):
     class Meta:
