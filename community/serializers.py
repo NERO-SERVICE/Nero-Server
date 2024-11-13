@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from rest_framework import serializers
 from .models import Post, PostImage, Comment, Report, CommentReport
 from accounts.serializers import UserProfileSerializer
@@ -38,23 +40,40 @@ class PostSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     images = PostImageSerializer(many=True, read_only=True)
     isLiked = serializers.SerializerMethodField()
+    created_time_ago = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = [
-            'post_id', 'user', 'content', 'created_at', 'updated_at',
+            'post_id', 'user', 'content', 'created_time_ago', 'updated_at',
             'likes_count', 'comments_count', 'comments', 'images', 'isLiked'
         ]
         read_only_fields = [
-            'post_id', 'user', 'created_at', 'updated_at',
+            'post_id', 'user', 'created_time_ago', 'updated_at',
             'likes_count', 'comments_count', 'comments', 'images', 'isLiked'
         ]
+
 
     def get_isLiked(self, obj):
         request = self.context.get('request', None)
         if request and request.user.is_authenticated:
             return obj.likes.filter(pk=request.user.pk).exists()
         return False
+    
+    def get_created_time_ago(self, obj):
+        now = timezone.localtime(timezone.now())
+        diff = now - obj.created_at
+
+        if diff < timedelta(minutes=1):
+            return "방금 전"
+        elif diff < timedelta(hours=1):
+            return f"{diff.seconds // 60}분 전"
+        elif diff < timedelta(days=1):
+            return f"{diff.seconds // 3600}시간 전"
+        elif diff < timedelta(days=7):
+            return f"{diff.days}일 전"
+        else:
+            return obj.created_at.strftime("%Y-%m-%d")
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
