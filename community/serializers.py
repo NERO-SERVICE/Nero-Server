@@ -61,8 +61,13 @@ class PostSerializer(serializers.ModelSerializer):
         return False
     
     def get_created_time_ago(self, obj):
+        created_at = obj.created_at
+        # created_at이 naive인 경우 timezone aware로 변환
+        if timezone.is_naive(created_at):
+            created_at = timezone.make_aware(created_at)
+        
         now = timezone.localtime(timezone.now())
-        diff = now - obj.created_at
+        diff = now - created_at
 
         if diff < timedelta(minutes=1):
             return "방금 전"
@@ -73,7 +78,7 @@ class PostSerializer(serializers.ModelSerializer):
         elif diff < timedelta(days=7):
             return f"{diff.days}일 전"
         else:
-            return obj.created_at.strftime("%Y-%m-%d")
+            return created_at.strftime("%Y-%m-%d")
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
