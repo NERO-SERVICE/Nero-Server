@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Comment, PostImage, Report, CommentReport
+from .models import Post, Comment, PostImage, Report, CommentReport, LikedPost
 
 class PostImageInline(admin.TabularInline):
     model = PostImage
@@ -51,7 +51,11 @@ class CommentReportAdmin(admin.ModelAdmin):
     def get_reported_comment_content(self, obj):
         return obj.comment.content if obj.comment else None
     get_reported_comment_content.short_description = '신고된 댓글 내용'
+    
+class LikedPostAdmin(admin.ModelAdmin):
+    list_display = ('user', 'post', 'liked_at')
 
+admin.site.register(LikedPost, LikedPostAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(Comment)
 admin.site.register(PostImage)

@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
-from .models import Post, PostImage, Comment, Report, CommentReport
+from .models import Post, PostImage, Comment, Report, CommentReport, LikedPost
 from accounts.serializers import UserProfileSerializer
 
 class PostImageSerializer(serializers.ModelSerializer):
@@ -121,3 +121,11 @@ class CommentReportSerializer(serializers.ModelSerializer):
         if 'report_type' not in data:
             raise serializers.ValidationError("신고 유형을 선택해야 합니다.")
         return data
+    
+class LikedPostSerializer(serializers.ModelSerializer):
+    post = PostSerializer(read_only=True)
+    liked_at = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = LikedPost
+        fields = ['post', 'liked_at']
