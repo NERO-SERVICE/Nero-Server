@@ -4,6 +4,9 @@ from accounts.models import User
 from PIL import Image, ImageOps
 from django.contrib.postgres.indexes import GinIndex
 import os
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 class Post(models.Model):
     post_id = models.AutoField(primary_key=True)
@@ -11,7 +14,7 @@ class Post(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
+    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True, through='LikedPost')
 
     class Meta:
         verbose_name = "게시물"
@@ -102,8 +105,8 @@ class Report(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
-        verbose_name = "신고"
-        verbose_name_plural = "신고"
+        verbose_name = "게시물 신고"
+        verbose_name_plural = "게시물 신고"
 
     def __str__(self):
         return f"{self.report_type} by {self.reporter.nickname} on Post {self.post.post_id if self.post else 'N/A'}"
@@ -127,3 +130,17 @@ class CommentReport(models.Model):
 
     def __str__(self):
         return f"{self.report_type} by {self.reporter.nickname} on Comment {self.comment.comment_id if self.comment else 'N/A'}"
+
+
+class LikedPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='liked_post_relations')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='liked_by_users')
+    liked_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'post')
+        verbose_name = 'Liked Post'
+        verbose_name_plural = 'Liked Posts'
+
+    def __str__(self):
+        return f"{self.user.nickname} liked Post {self.post.post_id}"

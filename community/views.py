@@ -1,8 +1,8 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Post, Comment
-from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer, ReportSerializer, CommentReportSerializer
+from .models import Post, Comment, LikedPost
+from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer, ReportSerializer, CommentReportSerializer, LikedPostSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.contrib.postgres.search import SearchVector, SearchQuery
@@ -157,3 +157,12 @@ class CommentReportCreateView(generics.CreateAPIView):
         comment_id = self.request.data.get('comment_id')
         comment = get_object_or_404(Comment, comment_id=comment_id) if comment_id else None
         serializer.save(reporter=self.request.user, comment=comment)
+        
+        
+class LikedPostListView(generics.ListAPIView):
+    serializer_class = LikedPostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return LikedPost.objects.filter(user=self.request.user).order_by('-liked_at')
