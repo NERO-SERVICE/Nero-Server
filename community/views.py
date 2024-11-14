@@ -6,7 +6,7 @@ from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.contrib.postgres.search import SearchVector, SearchQuery
-from django.db.models import Subquery, OuterRef
+from django.db.models import Subquery, OuterRef, Count
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -185,3 +185,14 @@ class MyPostsListView(generics.ListAPIView):
 
     def get_queryset(self):
         return Post.objects.filter(user=self.request.user).order_by('-created_at')
+    
+
+class PopularPostListView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.AllowAny]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return Post.objects.annotate(
+            likes_count=Count('likes')
+        ).filter(likes_count__gte=10).order_by('-likes_count', '-created_at')
