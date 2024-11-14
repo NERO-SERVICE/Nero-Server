@@ -5,7 +5,7 @@ from .models import Post, Comment, LikedPost
 from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer, CommentCreateSerializer, ReportSerializer, CommentReportSerializer, LikedPostSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from django.contrib.postgres.search import SearchVector, SearchQuery
+from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models import Subquery, OuterRef, Count
 
 class StandardResultsSetPagination(PageNumberPagination):
@@ -24,10 +24,9 @@ class PostListView(generics.ListAPIView):
         queryset = super().get_queryset()
         search_query = self.request.query_params.get('search', None)
         if search_query:
-            # 전체 텍스트 검색 적용
-            search_vector = SearchVector('content')
-            search_query = SearchQuery(search_query)
-            queryset = queryset.annotate(search=search_vector).filter(search=search_query)
+            queryset = queryset.annotate(
+                similarity=TrigramSimilarity('content', search_query)
+            ).filter(similarity__gt=0.1).order_by('-similarity', '-created_at')
         return queryset
 
 # 게시물 작성
