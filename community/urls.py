@@ -13,6 +13,7 @@ from .views import (
     LikedPostListView,
     MyPostsListView,
     PopularPostListView,
+    RecentPopularPostListView,
 )
 
 app_name = 'community'
@@ -31,4 +32,5 @@ urlpatterns = [
     path('posts/liked/', LikedPostListView.as_view(), name='liked_post_list'),
     path('posts/mine/', MyPostsListView.as_view(), name='my_post_list'),
     path('posts/popular/', PopularPostListView.as_view(), name='popular_post_list'),
+    path('posts/recent/', RecentPopularPostListView.as_view(), name='recent_post_list'),
 ]
