@@ -41,16 +41,17 @@ class PostSerializer(serializers.ModelSerializer):
     images = PostImageSerializer(many=True, read_only=True)
     isLiked = serializers.SerializerMethodField()
     created_time_ago = serializers.SerializerMethodField()
+    liked_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Post
         fields = [
             'post_id', 'user', 'content', 'created_time_ago', 'updated_at',
-            'likes_count', 'comments_count', 'comments', 'images', 'isLiked'
+            'likes_count', 'comments_count', 'comments', 'images', 'isLiked', 'liked_at'
         ]
         read_only_fields = [
             'post_id', 'user', 'created_time_ago', 'updated_at',
-            'likes_count', 'comments_count', 'comments', 'images', 'isLiked'
+            'likes_count', 'comments_count', 'comments', 'images', 'isLiked', 'liked_at'
         ]
 
 

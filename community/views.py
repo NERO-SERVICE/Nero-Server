@@ -6,7 +6,7 @@ from .serializers import PostSerializer, PostCreateSerializer, CommentSerializer
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.contrib.postgres.search import SearchVector, SearchQuery
-from django.db.models import Q
+from django.db.models import Subquery, OuterRef
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -165,4 +165,14 @@ class LikedPostListView(generics.ListAPIView):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return Post.objects.filter(liked_by_users__user=self.request.user).order_by('-likedpost__liked_at')
+        liked_posts = LikedPost.objects.filter(
+            user=self.request.user
+        ).order_by('-liked_at')
+
+        return Post.objects.filter(
+            pk__in=Subquery(liked_posts.values('post_id')[:1000])
+        ).annotate(
+            liked_at=Subquery(
+                liked_posts.filter(post_id=OuterRef('pk')).values('liked_at')[:1]
+            )
+        ).order_by('-liked_at')
