@@ -160,9 +160,9 @@ class CommentReportCreateView(generics.CreateAPIView):
         
         
 class LikedPostListView(generics.ListAPIView):
-    serializer_class = LikedPostSerializer
+    serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return LikedPost.objects.filter(user=self.request.user).order_by('-liked_at')
+        return Post.objects.filter(liked_by_users__user=self.request.user).order_by('-likedpost__liked_at')
