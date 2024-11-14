@@ -204,4 +204,8 @@ class RecentPopularPostListView(generics.ListAPIView):
     pagination_class = None  # 페이지네이션 비활성화
 
     def get_queryset(self):
-        return Post.objects.all().order_by('-created_at')[:3]
+        return Post.objects.annotate(
+            likes_count=Count('likes')
+        ).filter(
+            likes_count__gte=10
+        ).order_by('-created_at')[:3]
