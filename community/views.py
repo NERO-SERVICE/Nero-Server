@@ -176,3 +176,12 @@ class LikedPostListView(generics.ListAPIView):
                 liked_posts.filter(post_id=OuterRef('pk')).values('liked_at')[:1]
             )
         ).order_by('-liked_at')
+
+
+class MyPostsListView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+
+    def get_queryset(self):
+        return Post.objects.filter(user=self.request.user).order_by('-created_at')

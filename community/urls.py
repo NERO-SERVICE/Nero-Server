@@ -11,6 +11,7 @@ from .views import (
     ReportCreateView,
     CommentReportCreateView,
     LikedPostListView,
+    MyPostsListView,
 )
 
 app_name = 'community'
@@ -27,4 +28,5 @@ urlpatterns = [
     path('reports/create/', ReportCreateView.as_view(), name='report_create'),
     path('comments/reports/create/', CommentReportCreateView.as_view(), name='comment_report_create'),
     path('posts/liked/', LikedPostListView.as_view(), name='liked_post_list'),
+    path('posts/mine/', MyPostsListView.as_view(), name='my_post_list'),
 ]
