@@ -3,7 +3,6 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.response import Response as DRFResponse
 from .models import Today, SelfRecord, Question, Response as UserResponse, AnswerChoice, QuestionType, QuestionSubtype, SurveyCompletion
 from .serializers import SelfRecordSerializer, TodaySerializer, TodayDetailSerializer, QuestionSerializer, ResponseSerializer, QuestionSubtypeSerializer, SurveyCompletionSerializer, ResponsesBeforeSerializer
 from django.db.models.functions import TruncDate
@@ -54,7 +53,7 @@ class ResponseCreateView(APIView):
     def post(self, request):
         today, created = Today.objects.get_or_create(
             owner=request.user,
-            created_at__date=timezone.now().date(),
+            created_at__date=timezone.localtime(timezone.now()).date(),
             defaults={'next_appointment_date': None}
         )
 
@@ -70,7 +69,6 @@ class ResponseCreateView(APIView):
         if not responses:
             return Response({"error": "No responses provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Extract subtypes from responses
         subtypes = set()
         for response_data in responses:
             question_id = response_data.get('question_id')
@@ -88,7 +86,6 @@ class ResponseCreateView(APIView):
 
         subtype = subtypes.pop()
 
-        # Check if already completed
         if SurveyCompletion.objects.filter(today=today, response_type=response_type, question_subtype=subtype).exists():
             return Response({"error": "Survey for this subtype has already been completed today."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -109,16 +106,17 @@ class ResponseCreateView(APIView):
                 today=today,
                 question=question,
                 answer=answer,
-                response_type=response_type
+                response_type=response_type,
+                created_at=timezone.now()
             )
             response_instance.save()
             created_responses.append(response_instance)
 
-        # Create SurveyCompletion
         SurveyCompletion.objects.create(
             today=today,
             response_type=response_type,
-            question_subtype=subtype
+            question_subtype=subtype,
+            completed_at=timezone.now()
         )
 
         serializer = ResponseSerializer(created_responses, many=True)
@@ -134,6 +132,16 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
         month = self.request.query_params.get('month')
         day = self.request.query_params.get('day')
 
+        if not all([year, month, day]):
+            return SelfRecord.objects.none()  # 또는 적절한 에러 응답을 반환하도록 수정
+
+        try:
+            year = int(year)
+            month = int(month)
+            day = int(day)
+        except ValueError:
+            return SelfRecord.objects.none()  # 또는 적절한 에러 응답을 반환하도록 수정
+
         queryset = SelfRecord.objects.filter(
             today__owner=self.request.user,
             created_at__year=year,
@@ -146,7 +154,7 @@ class SelfRecordListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         today, created = Today.objects.get_or_create(
             owner=self.request.user,
-            created_at__date=timezone.now().date(),
+            created_at__date=timezone.localtime(timezone.now()).date(),
             defaults={'next_appointment_date': None}
         )
         serializer.save(today=today)
@@ -258,7 +266,7 @@ class SurveyCompletionListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        today = Today.objects.filter(owner=self.request.user, created_at__date=timezone.now().date()).first()
+        today = Today.objects.filter(owner=self.request.user, created_at__date=timezone.localtime(timezone.now()).date()).first()
         if not today:
             return SurveyCompletion.objects.none()
         return SurveyCompletion.objects.filter(today=today)
@@ -292,7 +300,7 @@ class ResponseBeforeView(APIView):
                 year = int(year)
                 month = int(month)
                 day = int(day)
-                date = timezone.datetime(year=year, month=month, day=day).date()
+                date_obj = date(year, month, day)
             except ValueError:
                 return Response({"error": "유효하지 않은 날짜 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -307,7 +315,7 @@ class ResponseBeforeView(APIView):
             
             # 사용자와 날짜에 해당하는 Today 객체 가져오기
             try:
-                today = Today.objects.get(owner=request.user, created_at__date=date)
+                today = Today.objects.get(owner=request.user, created_at__date=date_obj)
             except Today.DoesNotExist:
                 return Response({"error": "해당 날짜에 대한 기록이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
             
@@ -341,13 +349,13 @@ class ResponseBeforeView(APIView):
                 year = int(year)
                 month = int(month)
                 day = int(day)
-                date = timezone.datetime(year=year, month=month, day=day).date()
+                date_obj = date(year, month, day)
             except ValueError:
                 return Response({"error": "유효하지 않은 날짜 파라미터입니다."}, status=status.HTTP_400_BAD_REQUEST)
             
             # 사용자와 날짜에 해당하는 Today 객체 가져오기
             try:
-                today = Today.objects.get(owner=request.user, created_at__date=date)
+                today = Today.objects.get(owner=request.user, created_at__date=date_obj)
             except Today.DoesNotExist:
                 return Response({"error": "해당 날짜에 대한 기록이 존재하지 않습니다."}, status=status.HTTP_404_NOT_FOUND)
             
