@@ -19,7 +19,7 @@ class QuestionSubtypeSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         user = request.user if request else None
         if user:
-            today = Today.objects.filter(owner=user, created_at__date=timezone.now().date()).first()
+            today = Today.objects.filter(owner=user, created_at__date=timezone.localtime(timezone.now()).date()).first()
             response_type = self.context.get('response_type')
             if today and response_type:
                 return SurveyCompletion.objects.filter(
